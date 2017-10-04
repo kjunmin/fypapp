@@ -31,9 +31,9 @@ const appRoutes: Routes = [
     FlashMessagesModule,
     AgmCoreModule.forRoot( {
       apiKey: 'AIzaSyC0fDVH5KjNjVGXgHPKT7Z7icWjMCaESuo'
-    })
+    }),
   ],
-  providers: [TweetmarkerService],
+  providers: [TweetmarkerService, GoogleMapsAPIWrapper],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

@@ -1,6 +1,9 @@
-import { Component, OnInit, NgModule } from '@angular/core';
+import { Component, OnInit, NgModule, ViewChild, AfterViewInit } from '@angular/core';
 import { FlashMessagesService } from 'angular2-flash-messages';
 import { TweetmarkerService } from '../../services/tweetmarker.service';
+import { AgmCoreModule, GoogleMapsAPIWrapper, AgmInfoWindow, AgmDataLayer, AgmCircle } from '@agm/core';
+
+declare var google:any;
 
 @Component({
   selector: 'app-home',
@@ -9,6 +12,8 @@ import { TweetmarkerService } from '../../services/tweetmarker.service';
 })
 export class HomeComponent implements OnInit {
 
+  @ViewChild(AgmCircle) private agmCircle: AgmCircle;
+  @ViewChild(GoogleMapsAPIWrapper) private gmapWrapper: GoogleMapsAPIWrapper;
   tweetArray: Object[];
   myLat: number;
   myLng: number;
@@ -18,15 +23,20 @@ export class HomeComponent implements OnInit {
 
   constructor(
     private tweetmarkerService: TweetmarkerService, 
-    private flashMessagesService: FlashMessagesService 
+    private flashMessagesService: FlashMessagesService,
   ) { 
     this.myLabel = "YOU ARE HERE";
     this.myLat = 1.3553794;
     this.myLng = 103.86774439999999;
   }
 
+  ngAfterViewInit() {
+    var x=this.agmCircle.getBounds();
+    console.log(x);
+  }
+
   ngOnInit() {
-    
+    this.gmapWrapper.panTo({lat: this.myLat, lng:this.myLng});
   }
 
   getTweetsByUser(screenname) {
@@ -61,9 +71,4 @@ export class HomeComponent implements OnInit {
     this.tweetArray = tweetArray;
   }
 
-
-  displayTweetArray() {
-    console.log(this.tweetArray[0]);
-    console.log(this.tweetArray[1]);
-  }
 }

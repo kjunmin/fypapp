@@ -1,6 +1,7 @@
 <h1> FYP Test environment</h1>
 
 <agm-map>
+    <agm-circle [latitude]="myLat" [longitude]="myLng" [radius]="2000"></agm-circle>
     <agm-marker [latitude]="myLat" [longitude]="myLng"></agm-marker>
     <agm-marker *ngFor="let tweet of tweetArray" [latitude]="tweet.lat" [longitude]="tweet.lon">
         <agm-info-window>
@@ -39,6 +40,4 @@
         </div>
     </form>
 </div>
-
-
-<button class="btn btn-primary" (click)="displayTweetArray()">Display Tweet Array</button>
+<br>
