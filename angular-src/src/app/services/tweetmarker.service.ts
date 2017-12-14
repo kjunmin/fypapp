@@ -25,4 +25,11 @@ export class TweetmarkerService {
       .map(res => res.json());
   }
 
+  getTweetsInCircle(circleVal) {
+    let headers = new Headers();
+    headers.append('Content-type', 'application/json');
+    return this.http.post(this.apiUrl + 'users/gettweetscircle' , circleVal, {headers: headers})
+      .map(res => res.json());
+  }
+
 }

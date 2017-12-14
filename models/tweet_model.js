@@ -2,62 +2,59 @@ const mongoose = require('mongoose');
 const dbconfig = require('../config/database_config');
 
 const TweetMetadataSchema = mongoose.Schema({
-    tid:{
+    TweetId:{
         type: String,
         require: true
     },
-    
-    createtime: {
+    CreateTime: {
         type: String,
         require: true
     },
-    text: {
+    Text: {
         type: String,
         require: true
     },
-    hashtags: {
+    Hashtags: {
         type: String,
         require: false
     },
-    tags: {
+    Tags: {
         type: String,
         require: false
     },
-    lat: {
+    latitude: {
         type: Number,
         require: true
     },
-    lon: {
+    Longitude: {
         type: Number,
         require: true
     },
-    placeid: {
+    Location: {
+        coordinates: {
+            type: Object
+        },
+        require:false
+    },
+    PlaceId: {
         type: String,
         require: false
     },
-    placefullname: {
+    PlaceFullname: {
         type: String,
         require: false
     },
-    country: {
+    Country: {
         type: String,
         require: false
     },
-    screenname: {
+    Screenname: {
         type: String,
         require: true
     },
-    ulang: {
+    Language: {
         type: String,
         require: false
-    },
-    ulocation: {
-        type: String,
-        require: false
-    },
-    timestamp: {
-        type: String,
-        require: true
     }
 });
 
@@ -66,26 +63,37 @@ const TweetMetadata = module.exports = mongoose.model('tweetdata', TweetMetadata
 //Temporary Hard limit
 let tweetLimit = 1000;
 
-module.exports.getTweetById = (id, callback) => {
+TweetMetadata.getTweetById = (id, callback) => {
     let query = {_id: id};
     TweetMetadata.find(query, callback);
 }
 
-module.exports.getAllTweets = (callback) => {
-    let query = {};
-    TweetMetadata.find(query, callback);
-}
 
-module.exports.addTweet = (newTweet, callback) => {
+TweetMetadata.addTweet = (newTweet, callback) => {
     newTweet.save(callback);
 }
 
-module.exports.getTweetsByUser = (username, callback) => {
-    let query = { screenname: username };
+TweetMetadata.getTweetsByUser = (username, callback) => {
+    let query = { Screenname: username };
     TweetMetadata.find(query, callback);
 }
 
-module.exports.getTweetsByCountry = (country, callback) => {
-    let query = { country: country };
+TweetMetadata.getTweetsByCountry = (country, callback) => {
+    let query = { Country: country };
     TweetMetadata.find(query, callback).limit(tweetLimit);
+}
+
+TweetMetadata.getTweetByLocation = (lat, lng, minDistance, maxDistance, callback) => {
+    TweetMetadata.find({
+        Location: {
+            $near: { 
+                $geometry: { 
+                    type: "Point",
+                    coordinates: [ lng, lat ] 
+                },
+                $minDistance: minDistance,
+                $maxDistance: maxDistance
+            }
+        } 
+    }, callback);
 }

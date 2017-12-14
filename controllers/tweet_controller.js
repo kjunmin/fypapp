@@ -1,25 +1,22 @@
 const Tweet = require('../models/tweet_model');
-
 module.exports = {
     addTweet: (req, res, next) => {
         let newTweet = new Tweet({
-            tid: req.body.tid,
-            createtime: req.body.createtime,
-            text: req.body.text,
-            hashtags: req.body.hashtags,
-            tags: req.body.tags,
-            lat: req.body.lat,
-            lon: req.body.lon,
-            placeid: req.body.placeid,
-            placefullname: req.body.placefullname,
-            country: req.body.country,
-            screenname: req.body.screenname,
-            ulang: req.body.ulang,
-            ulocation: req.body.ulocation,
-            timestamp: req.body.timestamp
+            TweetId: req.body.tid,
+            CreateTime: req.body.createtime,
+            Text: req.body.text,
+            Hashtags: req.body.hashtags,
+            Tags: req.body.tags,
+            Latitude: req.body.lat,
+            Longitude: req.body.lon,
+            PlaceId: req.body.placeid,
+            PlaceFullname: req.body.placefullname,
+            Country: req.body.country,
+            Screenname: req.body.screenname,
+            Language: req.body.ulang,
         });
 
-        Tweet.addTweet( newTweet, (err, tweet) => {
+        Tweet.addTweet( newTweet, (err, results) => {
             if (err) {
                 throw err;
                 // res.json({success: false, output: 'Failed to register tweet.'});
@@ -31,45 +28,50 @@ module.exports = {
 
     getTweetsByUser: (req, res, next) => {
         let screenname = req.body.screenname;
-        console.log(screenname);
-        Tweet.getTweetsByUser(screenname, (err, tweet) => {
+        Tweet.getTweetsByUser(screenname, (err, results) => {
             if (err) throw err;
-            if (tweet.length == 0) {
+            if (results.length == 0) {
                 return res.json({ success: false, output: "No tweets by user found!"});
             } else {
-                return res.json({ success: true, output: tweet});
+                return res.json({ success: true, output: results});
             }
         })
     },
 
     getTweetsByCountry: (req, res, next) => {
         let country = req.body.country;
-        console.log(country);
-        Tweet.getTweetsByCountry(country, (err, tweet) => {
+        Tweet.getTweetsByCountry(country, (err, results) => {
             if (err) throw err;
-            if (tweet.length == 0) {
+            if (results.length == 0) {
                 return res.json({ success: false, output: "No tweets by country found!"});
             } else {
-                return res.json({ success: true, output: tweet});
+                return res.json({ success: true, output: results});
             }
         })
-    },
-
-    getAllTweets: (req, res, next) => {
-        Tweet.getAllTweets = (err, tweet) => {
-            if (err) throw err;
-            else return res.json({success: true, output: tweet})
-        }
     },
 
     getTweetById: (req, res, next) => {
-        Tweet.getTweetById('59d352f8ab60daa8ff6f0aaf', (err, tweet) => {
+        Tweet.getTweetById('59d352f8ab60daa8ff6f0aaf', (err, results) => {
             if (err) throw err;
-            if (tweet.length == 0) {
+            if (results.length == 0) {
                 res.json({ success: false, output: "No tweets by user found!"});
             } else {
-                res.json({success: true, output: tweet});
+                res.json({success: true, output: results});
             }
         })
-    } 
+    },
+
+    getTweetsInCircle: (req, res, next) => {
+        let latitude = req.body.lat;
+        let longitude = req.body.lng;
+        let minDistance = req.body.mindistance;
+        let maxDistance = req.body.maxdistance;
+        Tweet.getTweetByLocation(latitude, longitude, minDistance, maxDistance, (err, results) => {
+            if (results.length == 0) {
+                res.json({ success: false, output: "No tweets found in specified area!"});
+            } else {
+                res.json({ success: true, output: results});
+            }
+        }) 
+    }
 }

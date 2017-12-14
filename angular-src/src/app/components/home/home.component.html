@@ -1,16 +1,14 @@
 <h1> FYP Test environment</h1>
 
-<agm-map>
-    <agm-circle [latitude]="myLat" [longitude]="myLng" [radius]="2000"></agm-circle>
-    <agm-marker [latitude]="myLat" [longitude]="myLng"></agm-marker>
-    <agm-marker *ngFor="let tweet of tweetArray" [latitude]="tweet.lat" [longitude]="tweet.lon">
+ <agm-map (mapClick)="getTweetData($event)">
+    <agm-marker [latitude]="myLat" [longitude]="myLng" [label]="myLabel"></agm-marker>
+    <agm-marker  *ngFor="let tweet of tweetArray" (markerClick)="getMarkerData(tweet)" [label]="tweet.Label" [latitude]="tweet.Latitude" [longitude]="tweet.Longitude">
         <agm-info-window>
             <div class="tweet-window-container">
                 <ul class="list-group">
-                    <li class="list-group-item"><h5>User:</h5> {{tweet.screenname}}</li>
-                    <li class="list-group-item"><h5>text:</h5> {{tweet.text}}</li>
-                    <li class="list-group-item"><h5>Location:</h5> {{tweet.placefullname}}</li>
-                    <li class="list-group-item"><h5>Timestamp:</h5> {{tweet.timestamp}}</li>
+                    <li class="list-group-item"><h5>User:</h5> {{tweet.Screenname}}</li>
+                    <li class="list-group-item"><h5>text:</h5> {{tweet.Text}}</li>
+                    <li class="list-group-item"><h5>Tags:</h5> {{tweet.Tags}}</li>
                 </ul>
             </div>
         </agm-info-window>
@@ -21,23 +19,20 @@
     <flash-messages></flash-messages>
 </div>
 
-<div class="search-form">
-    <form (submit)="getTweetsByUser(screennameInput)">
-        <div class="form-group col-xs-12">
-            <label>Search By Screenname:</label>
-            <input type="text" class="form-control" [(ngModel)]="screennameInput" name="screennameInput">
-            <input type="submit" class="btn btn-primary" value="Search"> 
-        </div>
-    </form>
-</div>
-
-<div class="search-form">
-    <form (submit)="getTweetsByCountry(countryInput)">
-        <div class="form-group col-xs-12">
-            <label>Search By Country:</label>
-            <input type="text" class="form-control" [(ngModel)]="countryInput" name="countryInput">
-            <input type="submit" class="btn btn-primary" value="Search"> 
-        </div>
-    </form>
-</div>
+<table class="table table-hover">
+    <thead>
+        <tr>
+            <th scope="col">Text</th>
+            <th scope="col">Tags</th>
+            <th scope="col">Cosine Sim</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr scope="row" class="table-active" *ngFor="let tweet of tweetArray">
+            <td>{{tweet.Text}}</td>
+            <td>{{tweet.Tags}}</td>
+            <td>{{tweet.Similarity}}</td>
+        </tr>
+    </tbody>
+</table>
 <br>

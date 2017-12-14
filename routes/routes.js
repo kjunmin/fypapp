@@ -4,7 +4,7 @@ const TweetController = require('../controllers/tweet_controller');
 
 router.post('/gettweets', TweetController.getTweetsByUser);
 router.post('/gettweetsc', TweetController.getTweetsByCountry);
-router.get('/getall', TweetController.getAllTweets);
 router.post('/addtweet', TweetController.addTweet);
+router.post('/gettweetscircle', TweetController.getTweetsInCircle);
 
 module.exports = router;
