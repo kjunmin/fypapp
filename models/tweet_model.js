@@ -83,7 +83,7 @@ TweetMetadata.getTweetsByCountry = (country, callback) => {
     TweetMetadata.find(query, callback).limit(tweetLimit);
 }
 
-TweetMetadata.getTweetByLocation = (lat, lng, minDistance, maxDistance, callback) => {
+TweetMetadata.getTweetByLocation = (lat, lng, minDistance, maxDistance, sampleSize, callback) => {
     TweetMetadata.find({
         Location: {
             $near: { 
@@ -95,5 +95,5 @@ TweetMetadata.getTweetByLocation = (lat, lng, minDistance, maxDistance, callback
                 $maxDistance: maxDistance
             }
         } 
-    }, callback);
+    }, callback).limit(sampleSize);
 }

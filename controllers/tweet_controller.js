@@ -66,7 +66,8 @@ module.exports = {
         let longitude = req.body.lng;
         let minDistance = req.body.mindistance;
         let maxDistance = req.body.maxdistance;
-        Tweet.getTweetByLocation(latitude, longitude, minDistance, maxDistance, (err, results) => {
+        let sampleSize = req.body.sampleSize;
+        Tweet.getTweetByLocation(latitude, longitude, minDistance, maxDistance, sampleSize, (err, results) => {
             if (results.length == 0) {
                 res.json({ success: false, output: "No tweets found in specified area!"});
             } else {

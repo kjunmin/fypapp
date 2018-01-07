@@ -19,6 +19,15 @@
     <flash-messages></flash-messages>
 </div>
 
+<h2>Sample Size</h2>
+ <p>{{slider1Value}}</p>
+ <div ngD3Slider id="sampleSize" [step]="1"  [length]="250" [minValue]="1" [maxValue]="500" [initialValue]="200" (selectedValue)="onSlider1Change($event)"></div>
+
+ <h2>Displayed Tweets</h2>
+ <p>{{slider2Value}}</p>
+ <div ngD3Slider id="displayNum" [step]="1"  [length]="250" [minValue]="1" [maxValue]="500" [initialValue]="200" (selectedValue)="onSlider2Change($event)"></div>
+
+
 <table class="table table-hover">
     <thead>
         <tr>

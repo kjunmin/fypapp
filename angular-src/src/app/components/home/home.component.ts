@@ -22,6 +22,8 @@ export class HomeComponent implements OnInit {
   screennameInput: string;
   countryInput: string;
   lastClickedCircle: any;
+  slider1Value: Number;
+  slider2Value: Number;
 
   constructor(
     private agmCircle: AgmCircle,
@@ -34,6 +36,8 @@ export class HomeComponent implements OnInit {
     this.myLat = 1.3553794;
     this.myLng = 103.86774439999999;
     this.lastClickedCircle = null;
+    this.slider1Value = 200;
+    this.slider2Value = 200;
   }
 
 
@@ -79,59 +83,65 @@ export class HomeComponent implements OnInit {
   }
 
   getTweetsInCircle(lat, lng, minDistance, maxDistance) {
+    let sampleSize = this.slider1Value;
     let tweetArray = [];
     let circleVal = {
       lat: lat,
       lng: lng,
       mindistance: minDistance,
-      maxdistance: maxDistance
+      maxdistance: maxDistance,
+      sampleSize: sampleSize
     }
     this.tweetmarkerService.getTweetsInCircle(circleVal).subscribe(data => {
       if (data.success) {
-        for (let i = 0; i < data.output.length; i++) {
+        // for (let i = 0; i < data.output.length; i++) {
+        //   tweetArray.push(data.output[i]);
+        // }
+        //Limit by displayed tweets
+        for (let i = 0; i < this.slider2Value; i++) {
           tweetArray.push(data.output[i]);
         }
       } else {
         this.flashMessagesService.show(data.output, {cssClass: 'alert-danger', timeout:3000})
       }
     });
+    
     this.tweetArray = tweetArray;
   }
 
-  getTweetsByUser(screenname) {
-    let tweetArray = [];
-    const reqBody = {screenname: screenname};
-    this.tweetmarkerService.getTweetsByUser(reqBody).subscribe(data => {
-      if (data.success) {
-        for (let i = 0; i < data.output.length; i++) {
-          tweetArray.push(data.output[i]);
-        }
-        this.flashMessagesService.show(String(data.output.length) + " tweets found!", {cssClass: 'alert-success', timeout: 3000});
-      } else {
-        this.flashMessagesService.show(data.output, {cssClass: 'alert-danger', timeout: 3000});
-      }
-    })
-    this.tweetArray = tweetArray;
-  }
+  // getTweetsByUser(screenname) {
+  //   let tweetArray = [];
+  //   const reqBody = {screenname: screenname};
+  //   this.tweetmarkerService.getTweetsByUser(reqBody).subscribe(data => {
+  //     if (data.success) {
+  //       for (let i = 0; i < data.output.length; i++) {
+  //         tweetArray.push(data.output[i]);
+  //       }
+  //       this.flashMessagesService.show(String(data.output.length) + " tweets found!", {cssClass: 'alert-success', timeout: 3000});
+  //     } else {
+  //       this.flashMessagesService.show(data.output, {cssClass: 'alert-danger', timeout: 3000});
+  //     }
+  //   })
+  //   this.tweetArray = tweetArray;
+  // }
 
-  getTweetsByCountry(country) {
-    let tweetArray = [];
-    const reqBody = {country: country};
-    this.tweetmarkerService.getTweetsByCountry(reqBody).subscribe(data => {
-      if (data.success) {
-        for (let i = 0; i < data.output.length; i++) {
-          tweetArray.push(data.output[i]);
-        }
-        this.flashMessagesService.show(String(data.output.length) + " tweets found!", {cssClass: 'alert-success', timeout: 3000});
-      } else {
-        this.flashMessagesService.show(data.output, {cssClass: 'alert-danger', timeout: 3000});
-      }
-    })
-    this.tweetArray = tweetArray;
-  }
+  // getTweetsByCountry(country) {
+  //   let tweetArray = [];
+  //   const reqBody = {country: country};
+  //   this.tweetmarkerService.getTweetsByCountry(reqBody).subscribe(data => {
+  //     if (data.success) {
+  //       for (let i = 0; i < data.output.length; i++) {
+  //         tweetArray.push(data.output[i]);
+  //       }
+  //       this.flashMessagesService.show(String(data.output.length) + " tweets found!", {cssClass: 'alert-success', timeout: 3000});
+  //     } else {
+  //       this.flashMessagesService.show(data.output, {cssClass: 'alert-danger', timeout: 3000});
+  //     }
+  //   })
+  //   this.tweetArray = tweetArray;
+  // }
 
   getMarkerData(res) {
-    console.log(res);
     let lat = res.Latitude;
     let lng = res.Longitude;
     let tag = res.Tags;
@@ -152,11 +162,14 @@ export class HomeComponent implements OnInit {
     console.log(sim);
   }
 
-  substrCount() {
-    var str1 = ["test", "one", "two", "test"];
-    var master = ["one", "two", "test"];
-    let a = this.correlationService.constructVector(str1, master);
-    console.log(a);
+  //Slider 
+
+  onSlider1Change(value) {
+    this.slider1Value = value;
+  }
+
+  onSlider2Change(value) {
+    this.slider2Value = value;
   }
 
 }

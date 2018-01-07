@@ -6,20 +6,22 @@ import { RouterModule, Routes } from '@angular/router';
 import { AgmCoreModule, GoogleMapsAPIWrapper, AgmDataLayer, AgmInfoWindow, CircleManager, AgmCircle } from '@agm/core';
 import { FlashMessagesModule } from 'angular2-flash-messages';
 
-
 //Page Components
 import { AppComponent } from './app.component';
 import { HomeComponent } from './components/home/home.component';
+import {D3SliderDirective} from 'ng-d3-slider/d3-slider.directive'
 
 //Services
 import { TweetmarkerService } from './services/tweetmarker.service';
 import { CorrelationService } from './services/correlation.service';
 import { MapComponent } from './components/map/map.component';
+import { MapgreedyComponent } from './components/mapgreedy/mapgreedy.component';
 import { NavbarComponent } from './components/navbar/navbar.component';
 
 const appRoutes: Routes = [
   { path: '', component: HomeComponent },
-  { path: 'test', component: MapComponent}
+  { path: 'random', component: HomeComponent},
+  { path: 'greedy', component: MapComponent}
 ]
 
 @NgModule({
@@ -27,7 +29,9 @@ const appRoutes: Routes = [
     AppComponent,
     HomeComponent,
     MapComponent,
+    MapgreedyComponent,
     NavbarComponent,
+    D3SliderDirective
   ],
   imports: [
     BrowserModule,
