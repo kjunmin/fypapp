@@ -1,3 +1,42 @@
-<p>
-  mapgreedy works!
-</p>
+<h1> FYP Test environment</h1>
+
+ <agm-map (mapClick)="getTweetDataOnMapClick($event)">
+    <!-- <agm-marker [latitude]="myLat" [longitude]="myLng" [label]="myLabel"></agm-marker> -->
+    <!-- <agm-marker  *ngFor="let tweet of tweetArray" (markerClick)="compareSimWithMarker(tweet)" [label]="tweet.Label" [latitude]="tweet.Latitude" [longitude]="tweet.Longitude">
+        <agm-info-window>
+            <div class="tweet-window-container">
+                <ul class="list-group">
+                    <li class="list-group-item"><h5>User:</h5> {{tweet.Screenname}}</li>
+                    <li class="list-group-item"><h5>text:</h5> {{tweet.Text}}</li>
+                    <li class="list-group-item"><h5>Tags:</h5> {{tweet.Tags}}</li>
+                </ul>
+            </div>
+        </agm-info-window>
+    </agm-marker> -->
+</agm-map>
+
+<div class="flash-message-container">
+    <flash-messages></flash-messages>
+</div>
+
+<button (click)="selectGreedy()">Click</button>
+
+<table>
+    <tr>
+        <td>
+            <h2>Sample Size</h2>
+            <p>{{sliderSampleSize}}</p>
+            <div ngD3Slider id="sampleSize" [step]="1"  [length]="250" [minValue]="1" [maxValue]="500" [initialValue]="200" (selectedValue)="onSliderSampleChange($event)"></div>
+        </td>
+        <td>
+            <h2>Displayed Tweets</h2>
+            <p>{{sliderSelectedSize}}</p>
+            <div ngD3Slider id="displayNum" [step]="1"  [length]="250" [minValue]="1" [maxValue]="200" [initialValue]="200" (selectedValue)="onSliderDisplayChange($event)"></div>
+        </td>
+        <td>
+            <h2>Map Display</h2>
+            <p>{{sliderExternalSize}}</p>
+            <div ngD3Slider id="mapDisplayNum" [step]="1"  [length]="250" [minValue]="1" [maxValue]="100" [initialValue]="100" (selectedValue)="onSliderMapChange($event)"></div>
+        </td>
+    </tr>
+</table>

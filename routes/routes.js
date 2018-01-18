@@ -6,5 +6,6 @@ router.post('/gettweets', TweetController.getTweetsByUser);
 router.post('/gettweetsc', TweetController.getTweetsByCountry);
 router.post('/addtweet', TweetController.addTweet);
 router.post('/gettweetscircle', TweetController.getTweetsInCircle);
+router.post('/gettweetspolygon', TweetController.getTweetsInPolygon);
 
 module.exports = router;

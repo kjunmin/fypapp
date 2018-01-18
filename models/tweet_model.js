@@ -83,17 +83,33 @@ TweetMetadata.getTweetsByCountry = (country, callback) => {
     TweetMetadata.find(query, callback).limit(tweetLimit);
 }
 
-TweetMetadata.getTweetByLocation = (lat, lng, minDistance, maxDistance, sampleSize, callback) => {
-    TweetMetadata.find({
-        Location: {
-            $near: { 
-                $geometry: { 
-                    type: "Point",
-                    coordinates: [ lng, lat ] 
-                },
-                $minDistance: minDistance,
-                $maxDistance: maxDistance
+TweetMetadata.getTweetInCircle = (lat, lng, minDistance, maxDistance, sampleSize, callback) => {
+    TweetMetadata.find(
+        {
+            Location: {
+                $near: { 
+                    $geometry: { 
+                        type: "Point",
+                        coordinates: [ lng, lat ] 
+                    },
+                    $minDistance: minDistance,
+                    $maxDistance: maxDistance
+                }
+            } 
+        }, callback).limit(sampleSize);
+}
+
+TweetMetadata.getTweetInPolygon = (lat1, lng1, lat2, lng2, lat3, lng3, lat4, lng4, sampleSize, callback) => {
+    TweetMetadata.find(
+        {
+           Location: {
+                $geoWithin: {
+                    $geometry: {
+                        type : "Polygon" ,
+                        coordinates: [ [ [lng1, lat1],[lng3, lat3],   [lng4, lat4], [lng2,lat2], [lng1, lat1] ] ]
+                    }
+                }
             }
-        } 
-    }, callback).limit(sampleSize);
+        }, callback
+    ).limit(sampleSize);
 }

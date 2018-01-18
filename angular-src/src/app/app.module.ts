@@ -12,6 +12,7 @@ import { HomeComponent } from './components/home/home.component';
 import {D3SliderDirective} from 'ng-d3-slider/d3-slider.directive'
 
 //Services
+import { TweethandlerService } from './services/tweethandler.service';
 import { TweetmarkerService } from './services/tweetmarker.service';
 import { CorrelationService } from './services/correlation.service';
 import { MapComponent } from './components/map/map.component';
@@ -20,8 +21,8 @@ import { NavbarComponent } from './components/navbar/navbar.component';
 
 const appRoutes: Routes = [
   { path: '', component: HomeComponent },
-  { path: 'random', component: HomeComponent},
-  { path: 'greedy', component: MapComponent}
+  { path: 'random', component: MapComponent},
+  { path: 'greedy', component: MapgreedyComponent}
 ]
 
 @NgModule({
@@ -31,7 +32,7 @@ const appRoutes: Routes = [
     MapComponent,
     MapgreedyComponent,
     NavbarComponent,
-    D3SliderDirective
+    D3SliderDirective,
   ],
   imports: [
     BrowserModule,
@@ -43,7 +44,7 @@ const appRoutes: Routes = [
       apiKey: 'AIzaSyC0fDVH5KjNjVGXgHPKT7Z7icWjMCaESuo'
     }),
   ],
-  providers: [TweetmarkerService, CorrelationService, GoogleMapsAPIWrapper, CircleManager, AgmCircle], //
+  providers: [ TweethandlerService, TweetmarkerService, CorrelationService, GoogleMapsAPIWrapper, CircleManager, AgmCircle], //
   bootstrap: [AppComponent]
 })
 export class AppModule { }

@@ -1,4 +1,8 @@
-#map {
+agm-map {
     height: 700px;
-    width: 100%;
-}
+  }
+  
+  .flash-message-container {
+    height: 60px;
+    overflow: hidden;
+  }

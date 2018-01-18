@@ -32,4 +32,11 @@ export class TweetmarkerService {
       .map(res => res.json());
   }
 
+  getTweetsInPolygon(polygonVal) {
+    let headers = new Headers();
+    headers.append('Content-type', 'application/json');
+    return this.http.post(this.apiUrl + 'users/gettweetspolygon' , polygonVal, {headers: headers})
+      .map(res => res.json());
+  }
+
 }
