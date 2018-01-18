@@ -5,12 +5,6 @@ export class CorrelationService {
 
   constructor() { }
 
-  sHashTable(tweetArray: Object[]) {
-    tweetArray.forEach(element => {
-      
-    });
-
-  }
 
   getMaxDistance(m1, tArray) {
     let maxD = [];
@@ -21,7 +15,7 @@ export class CorrelationService {
     for (var i = 0; i< tArray.length; i++) {
       for (var j = 0; j < tArray.length; j++) {
         if (j != i) {
-          var curMax = this.getDistanceSimilarity(tArray[i], tArray[j]);
+          var curMax = this.getDistance(tArray[i], tArray[j]);
           maxD.push(curMax);
         }
       }
@@ -31,6 +25,25 @@ export class CorrelationService {
 
   deg2rad(deg) {
     return deg * (Math.PI/180)
+  }
+
+  buildSimilarityMatrix(sample, alpha) {
+    console.log("Building similarity matrix...");
+    let n = sample.length;
+    let sim = [];
+    //Initialize matrix
+    for (var i = 0; i< n; i++) {
+      for(var j = 0; j < n; j++) {
+        sim[i][j] = 0;
+      }
+    }
+    
+    for (var i = 0; i< n; i++) {
+      for(var j = 0; j < n; j++) {
+        sim[i][j] = this.calculateVectorSimilarity(sample[i], sample[j], alpha);
+      }
+      sim[i][i] = 1.0;
+    }
   }
 
   getSimilaritySum(m1, tArray, a) {
@@ -44,7 +57,7 @@ export class CorrelationService {
     for (var i = 0; i < tArray.length; i++) {
       if (sTid != tArray[i].TweetId) {
         var sim = this.getCosineSimilarty(sTag, tArray[i].Tags);
-        var dist = this.getDistanceSimilarity(m1, tArray[i]);
+        var dist = this.getDistanceArray(m1, tArray[i]);
         simSum += a*(dist/maxDistance) + (1-a)*sim; //Normalize Distance and add it with cossim using a as the selected weight
       }
     }
@@ -62,12 +75,19 @@ export class CorrelationService {
       if (sTid != tArray[i].TweetId) {
         var sim = this.getCosineSimilarty(sTag, tArray[i].Tags);
         tArray[i].CosSim = sim;
-        var dist = this.getDistanceSimilarity(m1, tArray[i]);
+        var dist = this.getDistance(m1, tArray[i]);
         tArray[i].Distance = dist;
         tArray[i].NormalizedSim = a*(dist/maxDistance) + (1-a)*sim; //Normalize Distance and add it with cossim using a as the selected weight
       }
     }
     return tArray;
+  }
+
+  calculateVectorSimilarity(t1, t2, a) {
+    let maxD = 2;
+    var dist = this.getDistance(t1, t2);
+    var coSim = this.getCosineSimilarty(t1.Tags, t2.Tags);
+    return a*(dist/maxD) + (1-a)*coSim;
   }
 
   calculateCosineSimilarity(m1, tArray) {
@@ -85,17 +105,17 @@ export class CorrelationService {
     return tArray;
   }
 
-  calculateDistanceSimilarity(m1, tArray) {
+  getDistanceArray(m1, tArray) {
     let sTid = m1.TweetId;
     for (var i = 0; i < tArray.length; i++) {
-      var dist = this.getDistanceSimilarity(m1, tArray[i]);
+      var dist = this.getDistance(m1, tArray[i]);
       tArray[i].Label = dist.toString();
     }
     return tArray;
   }
 
   //get distance between two points(latlng)
-  getDistanceSimilarity(m1, m2) {
+  getDistance(m1, m2) {
     let m1Lat = m1.Latitude;
     let m1Lng = m1.Longitude;
     let m2Lat = m2.Latitude;
@@ -121,6 +141,7 @@ export class CorrelationService {
     let sumArray = [];
     let v1 = [];
     let v2 = [];
+    let cosSim = 123;
     s1 = s1.toLowerCase();
     s2 = s2.toLowerCase();
     sArray1 = s1.split(',');
@@ -138,9 +159,12 @@ export class CorrelationService {
     v1 = this.constructVector(sArray1, sumArray);
     v2 = this.constructVector(sArray2, sumArray);
     let dot = this.dotProduct(v1, v2);
+    // console.log("dot:" + dot);
     let magV1 = this.getMagnitude(v1);
+    // console.log("v1:" + magV1);
     let magV2 = this.getMagnitude(v2);
-    let cosSim = dot/(magV1*magV2);
+    // console.log("v2:" + magV2);
+    cosSim = dot/(magV1*magV2);
     return cosSim;
   }
 

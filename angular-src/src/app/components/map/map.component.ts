@@ -1,4 +1,4 @@
-import { Component, OnInit, NgModule, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, NgModule, ViewChild, AfterViewInit, ChangeDetectorRef } from '@angular/core';
 import { FlashMessagesService } from 'angular2-flash-messages';
 import { TweetmarkerService } from '../../services/tweetmarker.service';
 import { CorrelationService } from '../../services/correlation.service';
@@ -18,6 +18,7 @@ export class MapComponent implements OnInit {
   tweetArray: Object[];
   lastTweetArray: Object[];
   lastTweetWindowArray: Object[];
+  tableDisplay: Object[];
   myLat: number;
   myLng: number;
   myLabel: string;
@@ -25,9 +26,11 @@ export class MapComponent implements OnInit {
   sliderSampleSize: number;
   sliderSelectedSize: number;
   sliderExternalSize: number;
+  sliderAlphaValue: number;
   isMapLoadEnabled: any;
 
   constructor(
+    private cd: ChangeDetectorRef,
     private agmCircle: AgmCircle,
     private circleManager: CircleManager,
     private tweetmarkerService: TweetmarkerService, 
@@ -41,6 +44,7 @@ export class MapComponent implements OnInit {
     this.sliderSampleSize = 200;
     this.sliderSelectedSize = 200;
     this.sliderExternalSize = 100;
+    this.sliderAlphaValue = 0.50;
     this.isMapLoadEnabled = false;
   }
 
@@ -50,7 +54,6 @@ export class MapComponent implements OnInit {
   }
 
   dropMarkerWithAnimation(markerArray) {
-    console.log(markerArray);
     console.log("Displaying markers");
     for (var i = 0; i < markerArray.length; i++) {
       console.log(markerArray[i].getVisible());
@@ -69,9 +72,8 @@ export class MapComponent implements OnInit {
     marker.info = this.createInfoWindow(object, mLatLng);
     google.maps.event.addListener(marker, 'click', function() {   //On clicking a marker
       if (this.tweetArray !== null) {
-        _self.compareSimWithMarker(object);     
-      }
-                            //Execute similarity calculation
+        _self.compareSimWithMarker(object);           //Execute similarity calculation
+      } 
       marker.info.open(this.gmapWrapper, marker);                 //And open the info window for the marker
     });
     return marker;
@@ -177,9 +179,12 @@ export class MapComponent implements OnInit {
 
   //Get similarity between selected tweet and others in area
   compareSimWithMarker(res) {
+    this.tableDisplay = undefined;
     let tArray: any[] = this.tweetArray;
-    var rArray = this.correlationService.calculateSimilarity(res, tArray, 0.5)
-    this.tweetArray = rArray;
+    let alpha = this.sliderAlphaValue;
+    console.log(res.Tags);
+    var rArray = this.correlationService.calculateSimilarity(res, tArray, alpha);
+    this.tableDisplay = rArray;
   }
 
   //Slider 
@@ -193,6 +198,10 @@ export class MapComponent implements OnInit {
 
   onSliderDisplayChange(value) {
     this.sliderSelectedSize = Math.round(value);
+  }
+
+  onSliderAlphaChange(value) {
+    this.sliderAlphaValue = value;
   }
 
   //returns a json object with mapbounds

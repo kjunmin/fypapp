@@ -20,6 +20,7 @@
 </div>
 
 <div class="form-check disabled">
+    <h3>Options</h3>
 <label class="form-check-label">
     <input class="form-check-input" type="checkbox" [checked]="isMapLoadEnabled" (change)="isMapLoadEnabled = !isMapLoadEnabled">
     Enable tweet window load on pan/zoom
@@ -29,24 +30,31 @@
 <table>
     <tr>
         <td>
-            <h2>Sample Size</h2>
+            <h3>Sample Size</h3>
             <p>{{sliderSampleSize}}</p>
             <div ngD3Slider id="sampleSize" [step]="1"  [length]="250" [minValue]="1" [maxValue]="500" [initialValue]="200" (selectedValue)="onSliderSampleChange($event)"></div>
         </td>
         <td>
-            <h2>Displayed Tweets</h2>
+            <h3>Displayed Tweets</h3>
             <p>{{sliderSelectedSize}}</p>
-            <div ngD3Slider id="displayNum" [step]="1"  [length]="250" [minValue]="1" [maxValue]="200" [initialValue]="200" (selectedValue)="onSliderDisplayChange($event)"></div>
+            <div ngD3Slider id="displayNum" [step]="1"  [length]="250"  [maxValue]='sliderSampleSize'  [minValue]="1"  [initialValue]="200" (selectedValue)="onSliderDisplayChange($event)"></div>
         </td>
         <td>
-            <h2>Map Display</h2>
+            <h3>Map Display</h3>
             <p>{{sliderExternalSize}}</p>
             <div ngD3Slider id="mapDisplayNum" [step]="1"  [length]="250" [minValue]="1" [maxValue]="100" [initialValue]="100" (selectedValue)="onSliderMapChange($event)"></div>
+        </td>
+        <td>
+            <h3>Alpha</h3>
+            <p>{{sliderAlphaValue}}</p> 
+            <div ngD3Slider id="alpha" [step]="0.01" [length]="250" [minValue]="0" [maxValue]="1" [initialValue]="0.5" (selectedValue)="onSliderAlphaChange($event)"></div>
         </td>
     </tr>
 </table>
 
-<table class="table table-hover">
+<hr>
+
+<table class="table table-hover" >
     <thead>
         <tr>
             <th scope="col">Text</th>
@@ -55,9 +63,9 @@
             <th scope="col">Normalized Sim</th>
         </tr>
     </thead>
-    <tbody>
-        <tr scope="row" class="table-active" *ngFor="let tweet of tweetArray">
-            <td>{{tweet.Text}}</td>
+    <tbody *ngIf="tableDisplay"> 
+        <tr scope="row" class="table-active" *ngFor="let tweet of tableDisplay">
+            <td>{{tweet.Tags}}</td>
             <td>{{tweet.CosSim}}</td>
             <td>{{tweet.Distance}}</td>
             <td>{{tweet.NormalizedSim}}</td>

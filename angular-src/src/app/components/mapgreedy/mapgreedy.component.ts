@@ -49,7 +49,7 @@ export class MapgreedyComponent implements OnInit {
     this.gmapWrapper.panTo({lat: this.myLat, lng:this.myLng});
   }
 
-  selectGreedy() {
+  selectGreedy(k) {
     //Sort the array in increasing Similarity to form a max heap
     function sortHeap(heap) {
       return heap.sort((a,b) => {
@@ -57,29 +57,35 @@ export class MapgreedyComponent implements OnInit {
       })
     }
 
-    let k = 50;
     let O = this.tweetArray;
     let S = null;
     let H = [];
+    let count = 0;
     O.forEach(element => {
+      count++;
       let tuple = {
         tweet: element,
         similarity: this.correlationService.getSimilaritySum(element, O, 0.5),
-        iteration: 0
+        iteration: 0,
+        id: count
       }
       H.push(tuple);
     });
-    let sortedHeap = sortHeap(H);
-    console.log(sortHeap(H));
-    console.log(sortedHeap.pop());
-    // while(S.length < k && H.length != 0) {
-    //   let t = H.pop();
-    //   let cnt = 0;
-    //   while (cnt != S.length) {
+    H = sortHeap(H);
+    for (var step = 0; S.length < k && H.length > 0; step++) {
+      let t = H.pop();
+      var topId = t.count;
+      while (t.iteration != step) {
         
-    //   }
-    // }
-
+      }
+    }
+    while(S.length < k && H.length != 0) {
+      let t = H.pop();
+      let cnt = 0;
+      while (cnt != S.length) {
+      }
+    }
+        
   }
 
   createMarker(object) {
