@@ -63,8 +63,8 @@
             <th scope="col">Normalized Sim</th>
         </tr>
     </thead>
-    <tbody *ngIf="tableDisplay"> 
-        <tr scope="row" class="table-active" *ngFor="let tweet of tableDisplay">
+    <tbody> 
+        <tr scope="row" class="table-active" *ngFor="let tweet of tableDisplay | async">
             <td>{{tweet.Tags}}</td>
             <td>{{tweet.CosSim}}</td>
             <td>{{tweet.Distance}}</td>

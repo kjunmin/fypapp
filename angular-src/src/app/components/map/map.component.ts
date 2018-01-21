@@ -16,7 +16,7 @@ export class MapComponent implements OnInit {
 
   @ViewChild(GoogleMapsAPIWrapper) private gmapWrapper: GoogleMapsAPIWrapper;
   tweetArray: Object[];
-  lastTweetArray: Object[];
+  lastTweetCircleArray: Object[];
   lastTweetWindowArray: Object[];
   tableDisplay: Object[];
   myLat: number;
@@ -53,13 +53,6 @@ export class MapComponent implements OnInit {
     this.gmapWrapper.panTo({lat: this.myLat, lng:this.myLng});
   }
 
-  dropMarkerWithAnimation(markerArray) {
-    console.log("Displaying markers");
-    for (var i = 0; i < markerArray.length; i++) {
-      console.log(markerArray[i].getVisible());
-      markerArray[i].setVisible(true);
-    }
-  }
 
   createMarker(object) {
     var _self = this;
@@ -87,8 +80,11 @@ export class MapComponent implements OnInit {
     // this.centerMap(position);
     let searchRadius = 2000;
     this.drawCircle(position, searchRadius);
-    this.deleteMarkersFromMap(this.lastTweetArray);
-    this.getTweetsInCircle(lat, lng, 0, searchRadius);
+    this.deleteMarkersFromMap(this.lastTweetCircleArray);
+    this.getTweetsInCircle(lat, lng, 0, searchRadius, data => {
+      this.tweetArray = data;
+      this.lastTweetCircleArray = this.displayTweetsOnMap(data);
+    });
   }
 
   //gets window tweet data (POLYGON)
@@ -96,7 +92,14 @@ export class MapComponent implements OnInit {
     this.deleteMarkersFromMap(this.lastTweetWindowArray);
     if (this.isMapLoadEnabled) {
       this.getMapBounds(res => {
-        this.lastTweetWindowArray = this.getTweetsInPolygon(res.northEastBounds.lat, res.northEastBounds.lng, res.northWestBounds.lat, res.northWestBounds.lng, res.southEastBounds.lat, res.southEastBounds.lng, res.southWestbounds.lat, res.southWestbounds.lng);
+        this.getTweetsInPolygon(res.northEastBounds.lat, res.northEastBounds.lng, 
+          res.northWestBounds.lat, res.northWestBounds.lng, 
+          res.southEastBounds.lat, res.southEastBounds.lng, 
+          res.southWestbounds.lat, res.southWestbounds.lng, 
+          data => {
+            this.tweetArray = data;
+            this.lastTweetWindowArray = this.displayTweetsOnMap(data);
+          });
       }); 
     }
   }
@@ -114,8 +117,19 @@ export class MapComponent implements OnInit {
     }
   }
 
+  displayTweetsOnMap(tArray) {
+    let tweetArray = [];
+    tArray.forEach(element => {
+      let marker = this.createMarker(element);
+      this.gmapWrapper.createMarker(marker).then(res => {
+        tweetArray.push(res);
+      })
+    });
+    return tweetArray;
+  }
+
   //Get tweets in an area
-  getTweetsInCircle(lat, lng, minDistance, maxDistance) {
+  getTweetsInCircle(lat, lng, minDistance, maxDistance, callback) {
     let sampleSize = this.sliderSampleSize;
     let tweetArray = [];
     let tweetArray2 = [];
@@ -126,27 +140,18 @@ export class MapComponent implements OnInit {
       maxdistance: maxDistance,
       sampleSize: sampleSize
     }
+    //Limit by sample size
     this.tweetmarkerService.getTweetsInCircle(circleVal).subscribe(data => {
       let _self = this;
       if (data.success) {
-        //Limit by displayed tweets
-        let arrSize = ( data.output.length > this.sliderSelectedSize ? this.sliderSelectedSize: data.output.length);
-        for (let i = 0; i < arrSize; i++) {
-          tweetArray2.push(data.output[i]);
-          let marker = this.createMarker(data.output[i]);
-          this.gmapWrapper.createMarker(marker).then(res => {
-            tweetArray.push(res);
-          })
-        }
+        callback(data.output);
       } else {
         this.flashMessagesService.show(data.output, {cssClass: 'alert-danger', timeout:3000})
       }
     });
-    this.tweetArray = tweetArray2;
-    this.lastTweetArray = tweetArray;
   }
 
-  getTweetsInPolygon(lat1, lng1, lat2, lng2, lat3, lng3, lat4, lng4){
+  getTweetsInPolygon(lat1, lng1, lat2, lng2, lat3, lng3, lat4, lng4, callback){
     let sampleSize = this.sliderExternalSize;
     let tweetArray = [];
     let polygonVal = {
@@ -162,19 +167,11 @@ export class MapComponent implements OnInit {
     }
     this.tweetmarkerService.getTweetsInPolygon(polygonVal).subscribe(data => {
       if (data.success) {
-        let arrSize = ( data.output.length > this.sliderExternalSize ? this.sliderExternalSize: data.output.length);
-        for (let i = 0; i < arrSize; i++) {
-          let marker = this.createMarker(data.output[i]);
-          this.gmapWrapper.createMarker(marker).then(res => {
-            this.lastTweetWindowArray.push(res);
-            tweetArray.push(res);
-          })
-        }
+        callback(data.output);
       } else {
         this.flashMessagesService.show(data.output, {cssClass: 'alert-danger', timeout:3000})
       }
     });
-    return tweetArray;
   }
 
   //Get similarity between selected tweet and others in area
@@ -183,8 +180,9 @@ export class MapComponent implements OnInit {
     let tArray: any[] = this.tweetArray;
     let alpha = this.sliderAlphaValue;
     console.log(res.Tags);
-    var rArray = this.correlationService.calculateSimilarity(res, tArray, alpha);
-    this.tableDisplay = rArray;
+    this.correlationService.calculateSimilarity(res, tArray, alpha).subscribe(data => {
+      this.tweetArray = data;
+    });
   }
 
   //Slider 

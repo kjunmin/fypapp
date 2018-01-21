@@ -17,7 +17,7 @@ export class MapgreedyComponent implements OnInit {
   private map:any;
 
   @ViewChild(GoogleMapsAPIWrapper) private gmapWrapper: GoogleMapsAPIWrapper;
-  tweetArray: Object[];
+  displayedTweetArray: Object[];
   lastTweetArray: Object[];
   lastTweetWindowArray: Object[];
   myLat: number;
@@ -25,8 +25,7 @@ export class MapgreedyComponent implements OnInit {
   myLabel: string;
   lastClickedCircle: any;
   sliderSampleSize: number;
-  sliderSelectedSize: number;
-  sliderExternalSize: number;
+  sliderDisplayNum: number;
 
   constructor(
     private agmCircle: AgmCircle,
@@ -40,8 +39,7 @@ export class MapgreedyComponent implements OnInit {
     this.myLng = 103.86774439999999;
     this.lastClickedCircle = null;
     this.sliderSampleSize = 200;
-    this.sliderSelectedSize = 200;
-    this.sliderExternalSize = 100;
+    this.sliderDisplayNum = 10;
   }
 
 
@@ -49,44 +47,131 @@ export class MapgreedyComponent implements OnInit {
     this.gmapWrapper.panTo({lat: this.myLat, lng:this.myLng});
   }
 
-  selectGreedy(k) {
-    //Sort the array in increasing Similarity to form a max heap
+  test() {
+    
+  }
+
+  naiveGreedy(O, alpha, k) {
+    function removeTweetFromArray(tweet, array) {
+      var index = array.map(function(e) { return e.TweetId; }).indexOf(tweet.TweetId);
+      if (index > -1) {
+        array.splice(index, 1);
+      }
+      return array;
+    }
+
     function sortHeap(heap) {
       return heap.sort((a,b) => {
         return parseFloat(a.similarity) - parseFloat(b.similarity);
       })
     }
+    
+    let S = [];
 
-    let O = this.tweetArray;
-    let S = null;
-    let H = [];
-    let count = 0;
-    O.forEach(element => {
-      count++;
-      let tuple = {
-        tweet: element,
-        similarity: this.correlationService.getSimilaritySum(element, O, 0.5),
-        iteration: 0,
-        id: count
-      }
-      H.push(tuple);
+    while (k >= S.length) {
+      let BigA = O;
+      let H = [];
+      console.log(O.length);
+      BigA.forEach(element => {
+        let tuple = {
+          tweet: element,
+          similarity: this.correlationService.getSimilaritySum(element, BigA, alpha)
+        }
+        H.push(tuple);
+      });
+      H = sortHeap(H);
+      let topTuple = H.pop();
+      BigA = removeTweetFromArray(topTuple.tweet, BigA);
+      S.push(topTuple);
+      
+    }
+    console.log(S);
+    this.deleteMarkersFromMap(this.lastTweetArray);
+    let tweetArray = [];
+    S.forEach(element => {
+      tweetArray.push(element.tweet);
     });
-    H = sortHeap(H);
-    for (var step = 0; S.length < k && H.length > 0; step++) {
-      let t = H.pop();
-      var topId = t.count;
-      while (t.iteration != step) {
-        
-      }
-    }
-    while(S.length < k && H.length != 0) {
-      let t = H.pop();
-      let cnt = 0;
-      while (cnt != S.length) {
-      }
-    }
-        
+    return tweetArray;
   }
+
+  //gets window tweet data (POLYGON)
+  getTweetDataOnBoundsChange() {
+    this.deleteMarkersFromMap(this.lastTweetWindowArray);
+    this.getMapBounds(res => {
+      this.getTweetsInPolygon(res.northEastBounds.lat, res.northEastBounds.lng, 
+        res.northWestBounds.lat, res.northWestBounds.lng,
+        res.southEastBounds.lat, res.southEastBounds.lng, 
+        res.southWestbounds.lat, res.southWestbounds.lng, data => {
+          var k = this.naiveGreedy(data, 0.5, 10);
+          this.lastTweetWindowArray = this.displayTweetsInArray(k);
+      });
+      // var tAr = this.naiveGreedy(tA , 0.5, 10);
+      // this.displayTweetsInArray(tAr);
+    }); 
+  }
+
+  getTweetsInPolygon(lat1, lng1, lat2, lng2, lat3, lng3, lat4, lng4, callback){
+    let sampleSize = this.sliderSampleSize;
+    let tweetArray = [];
+    let polygonVal = {
+      lat1: lat1,
+      lng1: lng1,
+      lat2: lat2,
+      lng2: lng2,
+      lat3: lat3,
+      lng3: lng3,
+      lat4: lat4,
+      lng4: lng4,
+      sampleSize: sampleSize
+    }
+    this.tweetmarkerService.getTweetsInPolygon(polygonVal).subscribe(data => {
+      if (data.success) {
+        console.log(data.output);
+        let arrSize = ( data.output.length > this.sliderSampleSize ? this.sliderSampleSize: data.output.length);
+        callback(data.output);
+      } else {
+        this.flashMessagesService.show(data.output, {cssClass: 'alert-danger', timeout:3000})
+      }
+    });
+  }
+
+  // selectGreedy(k) {
+  //   //Sort the array in increasing Similarity to form a max heap
+  //   function sortHeap(heap) {
+  //     return heap.sort((a,b) => {
+  //       return parseFloat(a.similarity) - parseFloat(b.similarity);
+  //     })
+  //   }
+
+  //   let S = null;
+  //   let H = [];
+  //   let count = 0;
+  //   O.forEach(element => {
+  //     count++;
+  //     let tuple = {
+  //       tweet: element,
+  //       similarity: this.correlationService.getSimilaritySum(element, O, 0.5),
+  //       iteration: 0,
+  //       id: count
+  //     }
+  //     H.push(tuple);
+  //   });
+  //   H = sortHeap(H);
+  //   for (var step = 0; S.length < k && H.length > 0; step++) {
+  //     let t = H.pop();
+  //     var topId = t.count;
+  //     while (t.iteration != step) {
+        
+  //     }
+  //   }
+  //   while(S.length < k && H.length != 0) {
+  //     let t = H.pop();
+  //     let cnt = 0;
+  //     while (cnt != S.length) {
+  //     }
+  //   }
+        
+  // }
 
   createMarker(object) {
     var _self = this;
@@ -99,7 +184,7 @@ export class MapgreedyComponent implements OnInit {
     marker.info = this.createInfoWindow(object, mLatLng);
     google.maps.event.addListener(marker, 'click', function() {   //On clicking a marker
       if (this.tweetArray !== null) {
-        _self.compareSimWithMarker(object);     
+        // _self.compareSimWithMarker(object);     
       }
                             //Execute similarity calculation
       marker.info.open(this.gmapWrapper, marker);                 //And open the info window for the marker
@@ -107,16 +192,15 @@ export class MapgreedyComponent implements OnInit {
     return marker;
   }
 
-  //Get focused tweet data (CIRCLE)
-  getTweetDataOnMapClick(res) {
-    let lat = res.coords.lat;
-    let lng = res.coords.lng;
-    const position = new google.maps.LatLng(lat, lng);
-    // this.centerMap(position);
-    let searchRadius = 2000;
-    this.drawCircle(position, searchRadius);
-    this.deleteMarkersFromMap(this.lastTweetArray);
-    this.getTweetsInCircle(lat, lng, 0, searchRadius);
+  displayTweetsInArray(tweetArray) {
+    let windowArray = [];
+    tweetArray.forEach(element => {
+      let marker = this.createMarker(element);
+      this.gmapWrapper.createMarker(marker).then(res => {
+        windowArray.push(res);
+      })
+    });
+    return windowArray;
   }
 
 
@@ -128,49 +212,10 @@ export class MapgreedyComponent implements OnInit {
     } else {
       mArray.forEach(element => {
         element.setMap(null);
-        mArray = null;
       });
     }
-  }
-
-  //Get tweets in an area
-  getTweetsInCircle(lat, lng, minDistance, maxDistance) {
-    let sampleSize = this.sliderSampleSize;
-    let tweetArray = [];
-    let tweetArray2 = [];
-    let circleVal = {
-      lat: lat,
-      lng: lng,
-      mindistance: minDistance,
-      maxdistance: maxDistance,
-      sampleSize: sampleSize
-    }
-    this.tweetmarkerService.getTweetsInCircle(circleVal).subscribe(data => {
-      let _self = this;
-      if (data.success) {
-        //Limit by displayed tweets
-        let arrSize = ( data.output.length > this.sliderSelectedSize ? this.sliderSelectedSize: data.output.length);
-        for (let i = 0; i < arrSize; i++) {
-          tweetArray2.push(data.output[i]);
-          let marker = this.createMarker(data.output[i]);
-          this.gmapWrapper.createMarker(marker).then(res => {
-            tweetArray.push(res);
-          })
-        }
-      } else {
-        this.flashMessagesService.show(data.output, {cssClass: 'alert-danger', timeout:3000})
-      }
-    });
-    this.tweetArray = tweetArray2;
-    this.lastTweetArray = tweetArray;
-  }
-
- 
-  //Get similarity between selected tweet and others in area
-  compareSimWithMarker(res) {
-    let tArray: any[] = this.tweetArray;
-    var rArray = this.correlationService.calculateSimilarity(res, tArray, 0.5)
-    this.tweetArray = rArray;
+    this.lastTweetArray = null;
+    this.lastTweetWindowArray = null;
   }
 
   //Slider 
@@ -178,12 +223,8 @@ export class MapgreedyComponent implements OnInit {
     this.sliderSampleSize = Math.round(value);
   }
 
-  onSliderMapChange(value) {
-    this.sliderExternalSize = Math.round(value);
-  }
-
   onSliderDisplayChange(value) {
-    this.sliderSelectedSize = Math.round(value);
+    this.sliderDisplayNum = Math.round(value);
   }
 
   //Pan to latlng position on map
@@ -226,13 +267,20 @@ export class MapgreedyComponent implements OnInit {
     return info;
   }
 
-  test() {
-    function sortHeap(heap) {
-      return heap.sort((a,b) => {
-        return parseFloat(a) - parseFloat(b);
-      })
-    }
-    var newArray = [1, 4, 3, 2, 1];
-    console.log(sortHeap(newArray));
+  //returns a json object with mapbounds
+  getMapBounds(callback) {
+    let _this = this;
+    this.gmapWrapper.getBounds().then(data => {
+      let windowInfo = data.toJSON();
+      // console.log(windowInfo);
+      let bounds = {
+        northEastBounds: {lat: windowInfo.north, lng: windowInfo.east},
+        southEastBounds: {lat: windowInfo.south, lng: windowInfo.east},
+        northWestBounds: {lat: windowInfo.north, lng: windowInfo.west},
+        southWestbounds: {lat: windowInfo.south, lng: windowInfo.west}
+      }
+      callback(bounds)
+    });
   }
+  
 }
