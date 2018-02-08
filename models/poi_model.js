@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 const dbconfig = require('../config/database_config');
 
-const POIMetadataSchema = mongoose.Schema({
-    LocationId:{
+const PlaceMetadataSchema = mongoose.Schema({
+    PlaceId:{
         type: String,
         require: true
     },
@@ -14,7 +14,7 @@ const POIMetadataSchema = mongoose.Schema({
         type: Number,
         require: true
     },
-    Address: {
+    PlaceName: {
         type: String,
         require: true
     },
@@ -26,28 +26,19 @@ const POIMetadataSchema = mongoose.Schema({
     },
     Category: {
         type: String,
+        require: true
     },
-    Date: {
-        type: String,
-    },
-    Url: {
-        type: String,
-    },
-    iUrl: {
-        type: String,
-    },
-    
 });
 
-const POIMetadata = module.exports = mongoose.model('poidata', POIMetadataSchema, 'poidata');
+const PoiMetadata = module.exports = mongoose.model('placedata', PlaceMetadataSchema, 'placedata');
 
-POIMetadata.getPOIById = (id, callback) => {
+PoiMetadata.getPoiById = (id, callback) => {
     let query = {_id: id};
-    POIMetadata.find(query, callback);
+    PoiMetadata.find(query, callback);
 }
 
-POIMetadata.getPOIInCircle = (lat, lng, minDistance, maxDistance, sampleSize, callback) => {
-    POIMetadata.find(
+PoiMetadata.getPoiInCircle = (lat, lng, minDistance, maxDistance, sampleSize, callback) => {
+    PoiMetadata.find(
         {
             Location: {
                 $near: { 
@@ -62,8 +53,8 @@ POIMetadata.getPOIInCircle = (lat, lng, minDistance, maxDistance, sampleSize, ca
         }, callback).limit(sampleSize);
 }
 
-POIMetadata.getPOIInPolygon = (lat1, lng1, lat2, lng2, lat3, lng3, lat4, lng4, sampleSize, callback) => {
-    POIMetadata.find(
+PoiMetadata.getPoiInPolygon = (lat1, lng1, lat2, lng2, lat3, lng3, lat4, lng4, sampleSize, callback) => {
+    PoiMetadata.find(
         {
            Location: {
                 $geoWithin: {
@@ -73,6 +64,28 @@ POIMetadata.getPOIInPolygon = (lat1, lng1, lat2, lng2, lat3, lng3, lat4, lng4, s
                     }
                 }
             }
+        }, callback
+    ).limit(sampleSize);
+}
+
+PoiMetadata.getPoiInPolygonSearch = (lat1, lng1, lat2, lng2, lat3, lng3, lat4, lng4, category, sampleSize, callback) => {
+    var regex = new RegExp(["^", category, "$"].join(""), "i");
+    PoiMetadata.find(
+        {
+            $and: [{
+                Location: {
+                    $geoWithin: {
+                        $geometry: {
+                            type : "Polygon" ,
+                            coordinates: [ [ [lng1, lat1],[lng3, lat3],   [lng4, lat4], [lng2,lat2], [lng1, lat1] ] ]
+                        }
+                    }
+                },
+                Category: {
+                    '$regex' : "\b" +category + "\b",
+                    '$options': 'i'
+                }
+            }]
         }, callback
     ).limit(sampleSize);
 }

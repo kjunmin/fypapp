@@ -26,4 +26,11 @@ export class PoimarkerService {
       .map(res => res.json());
   }
 
+  getPoiWithSearch(searchParams) {
+    let headers = new Headers();
+    headers.append('Content-type', 'application/json');
+    return this.http.post(this.apiUrl + 'users/getpoisearch' , searchParams, {headers: headers})
+      .map(res => res.json());
+  }
+
 }

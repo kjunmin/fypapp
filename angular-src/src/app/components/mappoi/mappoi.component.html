@@ -8,9 +8,17 @@
     <flash-messages></flash-messages>
 </div>
 
-<button (click)="test()">Click</button>
+<div class="search-bar">
+  <form (submit)="submitSearchQuery()">
+    <div class="form-group col-xs-4">
+      <input type="text" class="form-control" [(ngModel)] = "searchInput" name="searchInput" placeholder="Search">
+    </div>
+    <input type="submit" class="btn btn-primary" value="Search">
+  </form>
+</div>
 
-<table>
+<div class="slider-group">
+  <table>
     <tr>
         <td>
             <h2>Sample Size</h2>
@@ -23,4 +31,5 @@
             <div ngD3Slider id="displayNum" [step]="1"  [length]="250" [minValue]="1" [maxValue]="20" [initialValue]="10" (selectedValue)="onSliderDisplayChange($event)"></div>
         </td>
     </tr>
-</table>
+  </table>
+</div>

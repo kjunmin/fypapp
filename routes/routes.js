@@ -9,7 +9,8 @@ router.post('/addtweet', TweetController.addTweet);
 router.post('/gettweetscircle', TweetController.getTweetsInCircle);
 // router.post('/gettweetspolygon', TweetController.getRepresentativeArray);
 router.post('/gettweetspolygon', TweetController.getTweetsInPolygon);
-router.post('/getpoicircle', POIController.getPOIInCircle);
-router.post('/getpoipolygon', POIController.getPOIInPolygon);
+router.post('/getpoicircle', POIController.getPoiInCircle);
+router.post('/getpoipolygon', POIController.getPoiInPolygon);
+router.post('/getpoisearch', POIController.getPoiPolygonSearch);
 
 module.exports = router;

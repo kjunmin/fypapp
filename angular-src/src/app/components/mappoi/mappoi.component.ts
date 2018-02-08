@@ -28,6 +28,7 @@ export class MappoiComponent implements OnInit {
   sliderSampleSize: number;
   sliderDisplayNum: number;
   timeout: any;
+  searchInput: string;
 
   constructor(
     private agmCircle: AgmCircle,
@@ -46,15 +47,32 @@ export class MappoiComponent implements OnInit {
     this.timeout = 0;
   }
 
+  test() {
+    console.log("test");
+  }
+
   ngOnInit() { 
     this.gmapWrapper.panTo({lat: this.myLat, lng:this.myLng});
+  }
+
+  submitSearchQuery() {
+    this.deleteMarkersFromMap(this.lastPoiWindowArray);
+    this.getMapBounds(res => {
+      this.getPoiPolygonSearch(res.northEastBounds.lat, res.northEastBounds.lng, 
+        res.northWestBounds.lat, res.northWestBounds.lng,
+        res.southEastBounds.lat, res.southEastBounds.lng, 
+        res.southWestbounds.lat, res.southWestbounds.lng, data => {
+          // var k = this.algorithmService.selectGreedy(data, 0.5, 25);
+          this.lastPoiWindowArray = this.displayPoiInArray(data);
+      });
+    }); 
   }
 
   mapSettle() {
     clearTimeout(this.timeout);
     this.timeout = setTimeout(() => {
       this.getPoiDataOnBoundsChange();
-     } , 2000); //Get tweet data once map has been in idle state for 2 seconds
+     } , 3000); //Get tweet data once map has been in idle state for 2 seconds
   }
 
   //gets window tweet data (POLYGON)
@@ -69,6 +87,33 @@ export class MappoiComponent implements OnInit {
           this.lastPoiWindowArray = this.displayPoiInArray(data);
       });
     }); 
+  }
+
+  getPoiPolygonSearch(lat1, lng1, lat2, lng2, lat3, lng3, lat4, lng4, callback){
+    let sampleSize = this.sliderSampleSize;
+    let searchInput = this.searchInput;
+    let tweetArray = [];
+    let polygonVal = {
+      lat1: lat1,
+      lng1: lng1,
+      lat2: lat2,
+      lng2: lng2,
+      lat3: lat3,
+      lng3: lng3,
+      lat4: lat4,
+      lng4: lng4,
+      searchInput: searchInput,
+      sampleSize: sampleSize
+    }
+    this.poimarkerService.getPoiWithSearch(polygonVal).subscribe(data => {
+      if (data.success) {
+        console.log(data.output);
+        let arrSize = ( data.output.length > this.sliderSampleSize ? this.sliderSampleSize: data.output.length);
+        callback(data.output);
+      } else {
+        this.flashMessagesService.show(data.output, {cssClass: 'alert-danger', timeout:3000})
+      }
+    });
   }
 
   getPoiInPolygon(lat1, lng1, lat2, lng2, lat3, lng3, lat4, lng4, callback){
@@ -169,8 +214,8 @@ export class MappoiComponent implements OnInit {
     var info = new google.maps.InfoWindow({
       content: "<div class='tweet-window-container'> \
                   <ul class='list-group'> \
-                      <li class='list-group-item'> <img src=" +  marker.iUrl + "></li> \
-                      <li class='list-group-item'><h5>Information:</h5> " + marker.Address + "</li> \
+                      <li class='list-group-item'><h5>Name:</h5> " +  marker.PlaceName + "</li> \
+                      <li class='list-group-item'><h5>Category:</h5> " + marker.Category + "</li> \
                   </ul> \
               </div>",
       position: position
