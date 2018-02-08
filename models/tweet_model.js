@@ -22,7 +22,7 @@ const TweetMetadataSchema = mongoose.Schema({
         type: String,
         require: false
     },
-    latitude: {
+    Latitude: {
         type: Number,
         require: true
     },

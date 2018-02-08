@@ -3,7 +3,9 @@ import { FlashMessagesService } from 'angular2-flash-messages';
 import { TweetmarkerService } from '../../services/tweetmarker.service';
 import { CorrelationService } from '../../services/correlation.service';
 import { TweethandlerService } from '../../services/tweethandler.service';
+import { AlgorithmService } from '../../services/algorithm.service';
 import { AgmCoreModule, GoogleMapsAPIWrapper, AgmInfoWindow, AgmDataLayer, CircleManager, AgmCircle } from '@agm/core';
+import { Observable } from 'rxjs/Observable';
 
 declare var google:any;
 
@@ -26,6 +28,7 @@ export class MapgreedyComponent implements OnInit {
   lastClickedCircle: any;
   sliderSampleSize: number;
   sliderDisplayNum: number;
+  timeout: any;
 
   constructor(
     private agmCircle: AgmCircle,
@@ -33,6 +36,7 @@ export class MapgreedyComponent implements OnInit {
     private tweetmarkerService: TweetmarkerService, 
     private correlationService: CorrelationService,
     private flashMessagesService: FlashMessagesService,
+    private algorithmService: AlgorithmService
   ) { 
     this.myLabel = "YOU ARE HERE";
     this.myLat = 1.3553794;
@@ -40,58 +44,22 @@ export class MapgreedyComponent implements OnInit {
     this.lastClickedCircle = null;
     this.sliderSampleSize = 200;
     this.sliderDisplayNum = 10;
+    this.timeout = 0;
   }
 
 
-  ngOnInit() {
+  ngOnInit() { 
     this.gmapWrapper.panTo({lat: this.myLat, lng:this.myLng});
   }
 
   test() {
-    
   }
 
-  naiveGreedy(O, alpha, k) {
-    function removeTweetFromArray(tweet, array) {
-      var index = array.map(function(e) { return e.TweetId; }).indexOf(tweet.TweetId);
-      if (index > -1) {
-        array.splice(index, 1);
-      }
-      return array;
-    }
-
-    function sortHeap(heap) {
-      return heap.sort((a,b) => {
-        return parseFloat(a.similarity) - parseFloat(b.similarity);
-      })
-    }
-    
-    let S = [];
-
-    while (k >= S.length) {
-      let BigA = O;
-      let H = [];
-      console.log(O.length);
-      BigA.forEach(element => {
-        let tuple = {
-          tweet: element,
-          similarity: this.correlationService.getSimilaritySum(element, BigA, alpha)
-        }
-        H.push(tuple);
-      });
-      H = sortHeap(H);
-      let topTuple = H.pop();
-      BigA = removeTweetFromArray(topTuple.tweet, BigA);
-      S.push(topTuple);
-      
-    }
-    console.log(S);
-    this.deleteMarkersFromMap(this.lastTweetArray);
-    let tweetArray = [];
-    S.forEach(element => {
-      tweetArray.push(element.tweet);
-    });
-    return tweetArray;
+  mapSettle() {
+    clearTimeout(this.timeout);
+    this.timeout = setTimeout(() => {
+      this.getTweetDataOnBoundsChange();
+     } , 2000); //Get tweet data once map has been in idle state for 2 seconds
   }
 
   //gets window tweet data (POLYGON)
@@ -102,11 +70,9 @@ export class MapgreedyComponent implements OnInit {
         res.northWestBounds.lat, res.northWestBounds.lng,
         res.southEastBounds.lat, res.southEastBounds.lng, 
         res.southWestbounds.lat, res.southWestbounds.lng, data => {
-          var k = this.naiveGreedy(data, 0.5, 10);
+          var k = this.algorithmService.selectGreedy(data, 0.5, 25);
           this.lastTweetWindowArray = this.displayTweetsInArray(k);
       });
-      // var tAr = this.naiveGreedy(tA , 0.5, 10);
-      // this.displayTweetsInArray(tAr);
     }); 
   }
 
@@ -135,44 +101,6 @@ export class MapgreedyComponent implements OnInit {
     });
   }
 
-  // selectGreedy(k) {
-  //   //Sort the array in increasing Similarity to form a max heap
-  //   function sortHeap(heap) {
-  //     return heap.sort((a,b) => {
-  //       return parseFloat(a.similarity) - parseFloat(b.similarity);
-  //     })
-  //   }
-
-  //   let S = null;
-  //   let H = [];
-  //   let count = 0;
-  //   O.forEach(element => {
-  //     count++;
-  //     let tuple = {
-  //       tweet: element,
-  //       similarity: this.correlationService.getSimilaritySum(element, O, 0.5),
-  //       iteration: 0,
-  //       id: count
-  //     }
-  //     H.push(tuple);
-  //   });
-  //   H = sortHeap(H);
-  //   for (var step = 0; S.length < k && H.length > 0; step++) {
-  //     let t = H.pop();
-  //     var topId = t.count;
-  //     while (t.iteration != step) {
-        
-  //     }
-  //   }
-  //   while(S.length < k && H.length != 0) {
-  //     let t = H.pop();
-  //     let cnt = 0;
-  //     while (cnt != S.length) {
-  //     }
-  //   }
-        
-  // }
-
   createMarker(object) {
     var _self = this;
     var mLatLng = new google.maps.LatLng(object.Latitude, object.Longitude);
@@ -184,9 +112,8 @@ export class MapgreedyComponent implements OnInit {
     marker.info = this.createInfoWindow(object, mLatLng);
     google.maps.event.addListener(marker, 'click', function() {   //On clicking a marker
       if (this.tweetArray !== null) {
-        // _self.compareSimWithMarker(object);     
-      }
-                            //Execute similarity calculation
+        // _self.compareSimWithMarker(object);     //Execute similarity calculation
+      }             
       marker.info.open(this.gmapWrapper, marker);                 //And open the info window for the marker
     });
     return marker;

@@ -64,7 +64,13 @@
         </tr>
     </thead>
     <tbody> 
-        <tr scope="row" class="table-active" *ngFor="let tweet of tableDisplay | async">
+        <tr scope="row" class="table-active" *ngFor="let tweet of counter | async">
+            <td>{{tweet.Tags}}</td>
+            <td>{{tweet.CosSim}}</td>
+            <td>{{tweet.Distance}}</td>
+            <td>{{tweet.NormalizedSim}}</td>
+        </tr>
+        <tr scope="row" class="table-active" *ngFor="let tweet of dataStream">
             <td>{{tweet.Tags}}</td>
             <td>{{tweet.CosSim}}</td>
             <td>{{tweet.Distance}}</td>

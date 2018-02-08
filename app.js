@@ -9,6 +9,7 @@ const bodyparser = require('body-parser');
 //Import Config files
 const dbconfig = require('./config/database_config');
 
+
 //Connect to database via config file
 mongoose.connect(dbconfig.database);
 
@@ -42,7 +43,6 @@ app.get('/', (req, res)=> {
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/index.html'));
 });
-
 
 app.listen(port, () => {
     console.log('Server started on port: ' + port);

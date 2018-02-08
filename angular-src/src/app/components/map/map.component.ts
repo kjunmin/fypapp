@@ -3,6 +3,8 @@ import { FlashMessagesService } from 'angular2-flash-messages';
 import { TweetmarkerService } from '../../services/tweetmarker.service';
 import { CorrelationService } from '../../services/correlation.service';
 import { AgmCoreModule, GoogleMapsAPIWrapper, AgmInfoWindow, AgmDataLayer, CircleManager, AgmCircle } from '@agm/core';
+import { Observable } from 'rxjs/Observable';
+import { StatWindowComponent } from '../stat-window/stat-window.component';
 
 declare var google:any;
 
@@ -12,13 +14,14 @@ declare var google:any;
   styleUrls: ['./map.component.css']
 })
 export class MapComponent implements OnInit {
-  private map:any;
-
+  // private map:any;
+  
   @ViewChild(GoogleMapsAPIWrapper) private gmapWrapper: GoogleMapsAPIWrapper;
   tweetArray: Object[];
   lastTweetCircleArray: Object[];
   lastTweetWindowArray: Object[];
-  tableDisplay: Object[];
+  counter:Observable<Object[]>;
+  dataStream: Object[];
   myLat: number;
   myLng: number;
   myLabel: string;
@@ -28,6 +31,7 @@ export class MapComponent implements OnInit {
   sliderExternalSize: number;
   sliderAlphaValue: number;
   isMapLoadEnabled: any;
+
 
   constructor(
     private cd: ChangeDetectorRef,
@@ -57,7 +61,6 @@ export class MapComponent implements OnInit {
   createMarker(object) {
     var _self = this;
     var mLatLng = new google.maps.LatLng(object.Latitude, object.Longitude);
-  
     var marker = new google.maps.Marker({
         position: mLatLng,
     });
@@ -142,7 +145,6 @@ export class MapComponent implements OnInit {
     }
     //Limit by sample size
     this.tweetmarkerService.getTweetsInCircle(circleVal).subscribe(data => {
-      let _self = this;
       if (data.success) {
         callback(data.output);
       } else {
@@ -176,12 +178,13 @@ export class MapComponent implements OnInit {
 
   //Get similarity between selected tweet and others in area
   compareSimWithMarker(res) {
-    this.tableDisplay = undefined;
+    this.dataStream = undefined;
     let tArray: any[] = this.tweetArray;
     let alpha = this.sliderAlphaValue;
-    console.log(res.Tags);
-    this.correlationService.calculateSimilarity(res, tArray, alpha).subscribe(data => {
-      this.tweetArray = data;
+    this.counter = this.correlationService.calculateSimilarity(res, tArray, alpha);
+    this.counter.subscribe(data => {
+      this.dataStream = data;
+      console.log(data);
     });
   }
 

@@ -1,0 +1,18 @@
+<table class="table table-hover" >
+  <thead>
+      <tr>
+          <th scope="col">Text</th>
+          <th scope="col">Cossim</th>
+          <th scope="col">Distance(KM)</th>
+          <th scope="col">Normalized Sim</th>
+      </tr>
+  </thead>
+  <tbody> 
+      <tr scope="row" class="table-active" *ngFor="let tweet of observableData">
+          <td>{{tweet.Tags}}</td>
+          <td>{{tweet.CosSim}}</td>
+          <td>{{tweet.Distance}}</td>
+          <td>{{tweet.NormalizedSim}}</td>
+      </tr>
+  </tbody>
+</table>

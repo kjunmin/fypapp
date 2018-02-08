@@ -5,21 +5,25 @@ import 'rxjs/add/observable/of';
 @Injectable()
 export class CorrelationService {
 
-  constructor() { }
+  constructor(
+  ) { 
+  }
 
-  getMaxDistance(m1, tArray) {
+  getToken(string) {
+  }
+
+  getMaxDistance(tArray) {
     let maxD = [];
     function getMaxOfArray(numArray) {
-      return Math.max.apply(null, numArray);
+      return Math.max(...numArray);
     }
-    for (var i = 0; i< tArray.length; i++) {
-      for (var j = 0; j < tArray.length; j++) {
-        if (j != i) {
-          var curMax = this.getDistance(tArray[i], tArray[j]);
-          maxD.push(curMax);
+    tArray.forEach(el1 => {
+      tArray.forEach(el2 => {
+        if (el1 != el2) {
+          maxD.push(this.getDistance(el1, el2));
         }
-      }
-    }
+      });
+    });
     return getMaxOfArray(maxD);
   }
 
@@ -51,25 +55,27 @@ export class CorrelationService {
     let sLng = m1.Longitude;
     let sTag = m1.Tags;
     let sTid = m1.TweetId;
-    let maxDistance = this.getMaxDistance(m1, tArray);
-    let simSum = 0;
+    let maxDistance = this.getMaxDistance(tArray);
+    // let maxDistance = 2;
+    let simSum:number = 0;
     for (var i = 0; i < tArray.length; i++) {
       if (sTid != tArray[i].TweetId) {
         var sim = this.getCosineSimilarty(sTag, tArray[i].Tags);
         var dist = this.getDistance(m1, tArray[i]);
-        simSum += a*(dist/maxDistance) + (1-a)*sim; //Normalize Distance and add it with cossim using a as the selected weight
+        let simN = a*(dist/maxDistance) + (1-a)*sim; //Normalize Distance and add it with cossim using a as the selected weight
+        simSum += simN;
       }
     }
-    return simSum;
+    return simSum; //Return max similarity value
   }
 
-  calculateSimilarity(m1, tArray, a):Observable<any> {
+  calculateSimilarity(m1, tArray, a):Observable<any[]> {
     console.log("Calculating Similarity");
     let sLat = m1.Latitude;
     let sLng = m1.Longitude;
     let sTag = m1.Tags;
     let sTid = m1.TweetId;
-    let maxDistance = this.getMaxDistance(m1, tArray);
+    let maxDistance = this.getMaxDistance(tArray);
     for (var i = 0; i < tArray.length; i++) {
       if (sTid != tArray[i].TweetId) {
         var sim = this.getCosineSimilarty(sTag, tArray[i].Tags);
@@ -128,7 +134,7 @@ export class CorrelationService {
     let sumArray = [];
     let v1 = [];
     let v2 = [];
-    let cosSim = 123;
+    let cosSim = 0;
     s1 = s1.toLowerCase();
     s2 = s2.toLowerCase();
     sArray1 = s1.split(',');
