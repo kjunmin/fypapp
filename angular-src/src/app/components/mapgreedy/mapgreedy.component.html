@@ -1,6 +1,7 @@
 <h1> FYP Test environment</h1>
 
- <agm-map (idle)="mapSettle()">
+ <!-- <agm-map (idle)="mapSettle()"> -->
+<agm-map>
     
 </agm-map>
 
@@ -8,19 +9,19 @@
     <flash-messages></flash-messages>
 </div>
 
-<button (click)="test()">Click</button>
+<button (click)="getTweetDataOnBoundsChange()">Click</button>
 
 <table>
     <tr>
         <td>
             <h2>Sample Size</h2>
             <p>{{sliderSampleSize}}</p>
-            <div ngD3Slider id="sampleSize" [step]="1"  [length]="250" [minValue]="1" [maxValue]="500" [initialValue]="200" (selectedValue)="onSliderSampleChange($event)"></div>
+            <div ngD3Slider id="sampleSize" [step]="1"  [length]="250" [minValue]="1" [maxValue]="1000" [initialValue]="sliderSampleSize" (selectedValue)="onSliderSampleChange($event)"></div>
         </td>
         <td>
             <h2>Displayed Tweets</h2>
             <p>{{sliderDisplayNum}}</p>
-            <div ngD3Slider id="displayNum" [step]="1"  [length]="250" [minValue]="1" [maxValue]="20" [initialValue]="10" (selectedValue)="onSliderDisplayChange($event)"></div>
+            <div ngD3Slider id="displayNum" [step]="1"  [length]="250" [minValue]="1" [maxValue]="50" [initialValue]="10" (selectedValue)="onSliderDisplayChange($event)"></div>
         </td>
     </tr>
 </table>

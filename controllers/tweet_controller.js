@@ -80,16 +80,16 @@ module.exports = {
     },
 
     getTweetsInPolygon: (req, res, next) => {
-        let lat1 = req.body.lat1;
-        let lng1 = req.body.lng1;
-        let lat2 = req.body.lat2;
-        let lng2 = req.body.lng2;
-        let lat3 = req.body.lat3;
-        let lng3 = req.body.lng3;
-        let lat4 = req.body.lat4;
-        let lng4 = req.body.lng4;
+        let neLat = req.body.neLat;
+        let neLng = req.body.neLng;
+        let nwLat = req.body.nwLat;
+        let nwLng = req.body.nwLng;
+        let seLat = req.body.seLat;
+        let seLng = req.body.seLng;
+        let swLat = req.body.swLat;
+        let swLng = req.body.swLng;
         let sampleSize = req.body.sampleSize;
-        Tweet.getTweetInPolygon(lat1, lng1, lat2, lng2, lat3, lng3, lat4, lng4, sampleSize, (err, results) => {
+        Tweet.getTweetInPolygon(neLat, neLng, nwLat, nwLng, seLat, seLng, swLat, swLng, sampleSize, (err, results) => {
             if (err) throw err;
             if (results.length == 0) {
                 res.json({ success: false, output: "No tweets found in specified area!"});
@@ -99,25 +99,4 @@ module.exports = {
         })
     },
 
-    getRepresentativeArray: (req, res, next) => {
-        let lat1 = req.body.lat1;
-        let lng1 = req.body.lng1;
-        let lat2 = req.body.lat2;
-        let lng2 = req.body.lng2;
-        let lat3 = req.body.lat3;
-        let lng3 = req.body.lng3;
-        let lat4 = req.body.lat4;
-        let lng4 = req.body.lng4;
-        let sampleSize = req.body.sampleSize;
-        Tweet.getTweetInPolygon(lat1, lng1, lat2, lng2, lat3, lng3, lat4, lng4, sampleSize, (err, results) => {
-            if (err) throw err;
-            if (results.length == 0) {
-                res.json({ success: false, output: "No tweets found in specified area!"});
-            } else {
-                var tArray = selAlgo.naiveGreedy(results, 0.5, 5)
-                //console.log(tArray);
-                res.json({ success: true, output: results});
-            }
-        })
-    }
 }

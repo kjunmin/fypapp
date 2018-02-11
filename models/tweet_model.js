@@ -99,14 +99,14 @@ TweetMetadata.getTweetInCircle = (lat, lng, minDistance, maxDistance, sampleSize
         }, callback).limit(sampleSize);
 }
 
-TweetMetadata.getTweetInPolygon = (lat1, lng1, lat2, lng2, lat3, lng3, lat4, lng4, sampleSize, callback) => {
+TweetMetadata.getTweetInPolygon = (neLat, neLng, nwLat, nwLng, seLat, seLng, swLat, swLng, sampleSize, callback) => {
     TweetMetadata.find(
         {
            Location: {
                 $geoWithin: {
                     $geometry: {
                         type : "Polygon" ,
-                        coordinates: [ [ [lng1, lat1],[lng3, lat3],   [lng4, lat4], [lng2,lat2], [lng1, lat1] ] ]
+                        coordinates: [ [ [neLng, neLat], [seLng, seLat],   [swLng, swLat], [nwLng, nwLat], [neLng, neLat] ] ]
                     }
                 }
             }

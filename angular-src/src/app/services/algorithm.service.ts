@@ -55,9 +55,13 @@ export class AlgorithmService {
   }
 
 
-  selectGreedy(O, alpha, k) {
+  selectGreedy(O, lastO, alpha, k, callback) {
     console.log("Begin select greedy algorithm");
     var start = new Date().getTime();
+    if (lastO == undefined) {
+      lastO = [];
+    }
+    
     function removeTweetFromArray(tweet, array) {
       var index = array.map(function(e) { return e.TweetId; }).indexOf(tweet.TweetId);
       if (index > -1) {
@@ -73,8 +77,12 @@ export class AlgorithmService {
     }
 
     let S = [];
-
-    let BigA = O;
+    let lO = lastO.slice();
+    let BigA = O.slice();
+    //remove any instance of elements from last instance still in window
+    lO.forEach(element => {
+      BigA = removeTweetFromArray(element.tweet, BigA);
+    });
     let H = [];
     BigA.forEach(element => {
       let tuple = {
@@ -86,11 +94,16 @@ export class AlgorithmService {
     });
 
     H = sortHeap(H);
+    k = k - lO.length;
+    console.log("Generating " + k + "new tweets")
+    
     for (var step = 0; S.length < k; step++) {
+      if (k > BigA.length) {
+        break;
+      }
       H = sortHeap(H);
       let t = H.pop();
       var topId = t.step;
-      console.log(S.length);
       if (topId != step) {
         t.similarity = this.correlationService.getSimilaritySum(t.tweet, BigA, alpha);
         t.step = step+1;
@@ -100,15 +113,15 @@ export class AlgorithmService {
         BigA = removeTweetFromArray(t.tweet, BigA);
       }
     }
-    console.log(S);
   //   // this.deleteMarkersFromMap(this.lastTweetArray);
     let tweetArray = [];
     S.forEach(element => {
       tweetArray.push(element.tweet);
     });
     var end = new Date().getTime();
+    console.log("Algorithm complete, returning " + tweetArray.length + "tweets");
     console.log("Server proc " + (end - start) + " milliseconds.")
-    return tweetArray;   
+    callback(tweetArray);   
   }
 
 }

@@ -9,45 +9,32 @@ export class CorrelationService {
   ) { 
   }
 
-  getToken(string) {
-  }
 
   getMaxDistance(tArray) {
     let maxD = [];
-    function getMaxOfArray(numArray) {
-      return Math.max(...numArray);
+    let arr1 = tArray;
+    let arr2 = tArray;
+    function arrayMax(arr) {
+      var len = arr.length, max = -Infinity;
+      while (len--) {
+        if (arr[len] > max) {
+          max = arr[len];
+        }
+      }
+      return max;
     }
-    tArray.forEach(el1 => {
-      tArray.forEach(el2 => {
+    arr1.forEach(el1 => {
+      arr2.forEach(el2 => {
         if (el1 != el2) {
           maxD.push(this.getDistance(el1, el2));
         }
       });
     });
-    return getMaxOfArray(maxD);
+    return arrayMax(maxD);
   }
 
   deg2rad(deg) {
     return deg * (Math.PI/180)
-  }
-
-  buildSimilarityMatrix(sample, alpha) {
-    console.log("Building similarity matrix...");
-    let n = sample.length;
-    let sim = [];
-    //Initialize matrix
-    for (var i = 0; i< n; i++) {
-      for(var j = 0; j < n; j++) {
-        sim[i][j] = 0;
-      }
-    }
-    
-    for (var i = 0; i< n; i++) {
-      for(var j = 0; j < n; j++) {
-        sim[i][j] = this.calculateVectorSimilarity(sample[i], sample[j], alpha);
-      }
-      sim[i][i] = 1.0;
-    }
   }
 
   getSimilaritySum(m1, tArray, a) {
@@ -89,13 +76,6 @@ export class CorrelationService {
       observer.next(tArray);
       observer.complete();
     });
-  }
-
-  calculateVectorSimilarity(t1, t2, a) {
-    let maxD = 2;
-    var dist = this.getDistance(t1, t2);
-    var coSim = this.getCosineSimilarty(t1.Tags, t2.Tags);
-    return a*(dist/maxD) + (1-a)*coSim;
   }
 
   getDistanceArray(m1, tArray) {
