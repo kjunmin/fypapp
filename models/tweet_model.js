@@ -99,17 +99,37 @@ TweetMetadata.getTweetInCircle = (lat, lng, minDistance, maxDistance, sampleSize
         }, callback).limit(sampleSize);
 }
 
+// TweetMetadata.getTweetInPolygon = (neLat, neLng, nwLat, nwLng, seLat, seLng, swLat, swLng, sampleSize, callback) => {
+//     TweetMetadata.find(
+//         {
+//            Location: {
+//                 $geoWithin: {
+//                     $geometry: {
+//                         type : "Polygon" ,
+//                         coordinates: [ [ [neLng, neLat], [seLng, seLat],   [swLng, swLat], [nwLng, nwLat], [neLng, neLat] ] ]
+//                     }
+//                 }
+//             }
+//         }, callback
+//     ).limit(sampleSize);
+// }
+
 TweetMetadata.getTweetInPolygon = (neLat, neLng, nwLat, nwLng, seLat, seLng, swLat, swLng, sampleSize, callback) => {
-    TweetMetadata.find(
+    TweetMetadata.aggregate([
         {
-           Location: {
-                $geoWithin: {
-                    $geometry: {
-                        type : "Polygon" ,
-                        coordinates: [ [ [neLng, neLat], [seLng, seLat],   [swLng, swLat], [nwLng, nwLat], [neLng, neLat] ] ]
+            $match:{
+                Location: {
+                    $geoWithin: {
+                        $geometry: {
+                            type : "Polygon" ,
+                            coordinates: [ [ [neLng, neLat], [seLng, seLat],   [swLng, swLat], [nwLng, nwLat], [neLng, neLat] ] ]
+                        }
                     }
                 }
             }
-        }, callback
-    ).limit(sampleSize);
+        },
+        {
+            $sample: { size: sampleSize }
+        }
+    ], callback)
 }

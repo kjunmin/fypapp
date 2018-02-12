@@ -10,6 +10,9 @@
   "author": "Matthew Koh",
   "license": "ISC",
   "dependencies": {
+    "@angular/animations": "^5.2.4",
+    "@angular/cdk": "^5.2.0",
+    "@angular/material": "^5.2.0",
     "cors": "^2.8.4",
     "express": "*",
     "mongoose": "*",
