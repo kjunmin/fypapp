@@ -2,12 +2,12 @@ import { Component, OnInit, NgModule, ViewChild, AfterViewInit, ChangeDetectorRe
 import { FlashMessagesService } from 'angular2-flash-messages';
 import { TweetmarkerService } from '../../services/tweetmarker.service';
 import { CorrelationService } from '../../services/correlation.service';
-import { TweethandlerService } from '../../services/tweethandler.service';
 import { AlgorithmService } from '../../services/algorithm.service';
 import { MapWindow } from '../../models/window';
 import { AgmCoreModule, GoogleMapsAPIWrapper, AgmInfoWindow, AgmDataLayer, CircleManager, AgmCircle } from '@agm/core';
 import { Observable } from 'rxjs/Observable';
 import { Promise } from 'q';
+import { MapMarker } from '../../models/marker';
 
 
 declare var google:any;
@@ -31,7 +31,6 @@ export class MapgreedyComponent implements OnInit {
   sliderDisplayNum: number;
   sliderMinDistance: number;
   timeout: any;
-  tweet;
 
   constructor(
     private changeDetectorRef: ChangeDetectorRef,
@@ -48,16 +47,7 @@ export class MapgreedyComponent implements OnInit {
     this.sliderDisplayNum = 10;
     this.sliderMinDistance = 2;
     this.timeout = 0;
-    this.displayedTweetArray = [
-      {
-        Tags: "have,you,seen,without,make,not,the,first,place",
-        PlaceFullname: "West Region, Singapore",
-      }
-    ];
-    this.tweet = {
-      Tags: "have,you,seen,without,make,not,the,first,place",
-      PlaceFullname: "West Region, Singapore",
-    }
+    this.displayedTweetArray = [];
   }
 
 
@@ -66,6 +56,18 @@ export class MapgreedyComponent implements OnInit {
   }
 
   test() {
+    let _self = this;
+    function callback(place, status) {
+        if (status == google.maps.places.PlacesServiceStatus.OK) {
+          let a = _self.createPlaceMarker(place);
+          _self.gmapWrapper.createMarker(a);
+          _self.gmapWrapper.panTo(place.geometry.location);
+        }
+      }
+    this.gmapWrapper.getNativeMap().then(map => {
+      let service = new google.maps.places.PlacesService(map);
+      service.getDetails({placeId:'ChIJN1t_tDeuEmsRUsoyG83frY4'}, callback);
+    })
   }
 
   mapSettle() {
@@ -87,10 +89,6 @@ export class MapgreedyComponent implements OnInit {
           console.log("data output from greedy:")
           console.log(data);
           _self.displayTweetsInArray(data).then(res => {
-              // console.log("lastTweetArrayBefore");
-              // console.log(_self.lastTweetArray);
-              // console.log("CurrentTweetArray:");
-              // console.log(res);
               if (_self.lastTweetArray == undefined) {
                 _self.lastTweetArray = res;
               }else {
@@ -116,31 +114,39 @@ export class MapgreedyComponent implements OnInit {
     }); 
   }
 
-  displayInfoWindow(object):Observable<any[]> {
-    return Observable.create(observer => {
-      observer.next(object);
-      observer.complete();
+  createPlaceMarker(place) {
+    console.log(place);
+    let image = {
+      url: place.icon,
+      size: new google.maps.Size(71, 71),
+      origin: new google.maps.Point(0, 0),
+      anchor: new google.maps.Point(17, 34),
+      scaledSize: new google.maps.Size(25, 25)
+    };
+
+    let marker = new google.maps.Marker({
+      icon: image,
+      title: place.name,
+      position: place.geometry.location
     });
+    return marker;
   }
 
-  createMarker(object) {
+
+  createMarker(tweet) {
     var _self = this;
-    var mLatLng = new google.maps.LatLng(object.Latitude, object.Longitude);
+    var mLatLng = new google.maps.LatLng(tweet.Latitude, tweet.Longitude);
   
     var marker = new google.maps.Marker({
         position: mLatLng,
-        tweet: object
+        tweet: tweet
     });
     marker.setAnimation(google.maps.Animation.DROP);
-    marker.info = this.createInfoWindow(object, mLatLng);
+    marker.info = new MapMarker().createInfoWindow(tweet, mLatLng);
     google.maps.event.addListener(marker, 'click', function() {   //On clicking a marker
-      // _self.displayInfoWindow(object).subscribe(res => {
-      //   _self.displayedTweetArray.push(res);
-      // })
-      _self.displayedTweetArray.push(object);
+      _self.displayedTweetArray.push(tweet);
       _self.changeDetectorRef.detectChanges();
-      console.log(_self.displayedTweetArray);
-      // marker.info.open(this.gmapWrapper, marker);                 //And open the info window for the marker
+      marker.info.open(this.gmapWrapper, marker);                 //And open the info window for the marker
     });
     return marker;
   }
@@ -207,32 +213,11 @@ export class MapgreedyComponent implements OnInit {
     this.sliderMinDistance = Math.round(value);
   }
 
-  //Pan to latlng position on map
-  centerMap(position) {
-    this.gmapWrapper.panTo(position);
-  }
-
-  createInfoWindow(marker, position) {
-    var info = new google.maps.InfoWindow({
-      content: "<div class='tweet-window-container'> \
-                  <ul class='list-group'> \
-                      <li class='list-group-item'><h5>User:</h5> " + marker.Screenname + "</li> \
-                      <li class='list-group-item'><h5>text:</h5> " + marker.Text + "</li> \
-                      <li class='list-group-item'><h5>Tags:</h5> " + marker.Tags + "</li> \
-                  </ul> \
-              </div>",
-      position: position,
-      disableAutoPan: true
-    })
-    return info;
-  }
-
   //returns a json object with mapbounds
   getMapBounds(callback) {
     let _this = this;
     this.gmapWrapper.getBounds().then(data => {
       let windowInfo = data.toJSON();
-      // console.log(windowInfo);
       let bounds = {
         northEastBounds: {lat: windowInfo.north, lng: windowInfo.east},
         southEastBounds: {lat: windowInfo.south, lng: windowInfo.east},

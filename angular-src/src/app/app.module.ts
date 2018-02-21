@@ -12,7 +12,6 @@ import { HomeComponent } from './components/home/home.component';
 import {D3SliderDirective} from 'ng-d3-slider/d3-slider.directive'
 
 //Services
-import { TweethandlerService } from './services/tweethandler.service';
 import { TweetmarkerService } from './services/tweetmarker.service';
 import { PoimarkerService } from './services/poimarker.service'
 import { CorrelationService } from './services/correlation.service';
@@ -48,10 +47,11 @@ const appRoutes: Routes = [
     FormsModule,
     FlashMessagesModule,
     AgmCoreModule.forRoot( {
-      apiKey: 'AIzaSyC0fDVH5KjNjVGXgHPKT7Z7icWjMCaESuo'
+      apiKey: 'AIzaSyC0fDVH5KjNjVGXgHPKT7Z7icWjMCaESuo',
+      libraries: ['places']
     }),
   ],
-  providers: [ AlgorithmService, TweethandlerService, PoimarkerService, TweetmarkerService, CorrelationService, GoogleMapsAPIWrapper, CircleManager, AgmCircle], //
+  providers: [ AlgorithmService, PoimarkerService, TweetmarkerService, CorrelationService, GoogleMapsAPIWrapper, CircleManager, AgmCircle], //
   bootstrap: [AppComponent]
 })
 export class AppModule { }

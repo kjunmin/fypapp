@@ -9,6 +9,7 @@ agm-map {
 
 #content-box {
   position: absolute;
+  word-wrap: break-word;
   width: 360px;
   height: 700px;
   right: 20px;
