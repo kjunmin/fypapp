@@ -51,7 +51,7 @@ const appRoutes: Routes = [
       libraries: ['places']
     }),
   ],
-  providers: [ AlgorithmService, PoimarkerService, TweetmarkerService, CorrelationService, GoogleMapsAPIWrapper, CircleManager, AgmCircle], //
+  providers: [ AlgorithmService, PoimarkerService, TweetmarkerService, CorrelationService, GoogleMapsAPIWrapper, AgmCircle, CircleManager], //
   bootstrap: [AppComponent]
 })
 export class AppModule { }

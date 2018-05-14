@@ -148,11 +148,11 @@ export class AlgorithmService {
         for (let step = 0; S.length < k; step++) {
           H = sortHeap(H);
           let t = H.pop();
-          S.forEach(element => {
-            if (element.tweet.TweetId == t.tweet.TweetId) {
-              console.log("present");
-            }
-          });
+          // S.forEach(element => {
+          //   if (element.tweet.TweetId == t.tweet.TweetId) {
+          //     console.log("present");
+          //   }
+          // });
           if (t.step != step) {
             t.similarity = this.correlationService.getSimilaritySum(t.tweet, BigA, alpha);
             t.step = step+1;

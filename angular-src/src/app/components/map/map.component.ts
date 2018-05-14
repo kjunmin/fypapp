@@ -57,6 +57,15 @@ export class MapComponent implements OnInit {
     this.gmapWrapper.panTo({lat: this.myLat, lng:this.myLng});
   }
 
+  test() {
+    let country = {country: "Singapore"};
+    this.tweetmarkerService.getTweetsByCountry(country).subscribe(data => {
+      console.log(data);
+      this.displayTweetsOnMap(data.output);
+      // this.lastTweetWindowArray = this.displayTweetsOnMap(data);
+    })
+  }
+
 
   createMarker(object) {
     var _self = this;
@@ -154,7 +163,7 @@ export class MapComponent implements OnInit {
   }
 
   getTweetsInPolygon(lat1, lng1, lat2, lng2, lat3, lng3, lat4, lng4, callback){
-    let sampleSize = this.sliderExternalSize;
+    let sampleSize = 200;
     let tweetArray = [];
     let polygonVal = {
       lat1: lat1,
@@ -261,8 +270,6 @@ export class MapComponent implements OnInit {
     return info;
   }
 
-  test() {
-  }
 }
 
 

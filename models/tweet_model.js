@@ -61,7 +61,7 @@ const TweetMetadataSchema = mongoose.Schema({
 const TweetMetadata = module.exports = mongoose.model('tweetdata', TweetMetadataSchema, 'tweetdata');
 
 //Temporary Hard limit
-let tweetLimit = 1000;
+let tweetLimit = 10000;
 
 TweetMetadata.getTweetById = (id, callback) => {
     let query = {_id: id};
@@ -84,19 +84,25 @@ TweetMetadata.getTweetsByCountry = (country, callback) => {
 }
 
 TweetMetadata.getTweetInCircle = (lat, lng, minDistance, maxDistance, sampleSize, callback) => {
-    TweetMetadata.find(
+    TweetMetadata.aggregate([
         {
-            Location: {
-                $near: { 
-                    $geometry: { 
-                        type: "Point",
-                        coordinates: [ lng, lat ] 
-                    },
-                    $minDistance: minDistance,
-                    $maxDistance: maxDistance
-                }
-            } 
-        }, callback).limit(sampleSize);
+            $match: {
+                Location: {
+                    $geoNear: { 
+                        $geometry: { 
+                            type: "Point",
+                            coordinates: [ lng, lat ] 
+                        },
+                        $minDistance: minDistance,
+                        $maxDistance: maxDistance
+                    }
+                } 
+            }
+        },
+        {
+            $sample: { size: sampleSize }
+        }
+    ], callback)
 }
 
 // TweetMetadata.getTweetInPolygon = (neLat, neLng, nwLat, nwLng, seLat, seLng, swLat, swLng, sampleSize, callback) => {

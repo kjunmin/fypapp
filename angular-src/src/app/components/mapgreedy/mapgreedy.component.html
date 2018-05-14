@@ -1,10 +1,10 @@
-<h1> FYP Test environment</h1>
+<h1></h1>
 
-<!-- <agm-map (idle)="mapSettle()"> -->
-<agm-map>
+<agm-map (idle)="mapSettle()">
+<!-- <agm-map> -->
 </agm-map>
 
-<div id="content-box">
+<!-- <div id="content-box">
     
     <table class="table table-hover" >
         <thead>
@@ -24,14 +24,15 @@
             </tr>
         </tbody>
     </table>
-</div>
+</div> -->
 
 <div class="flash-message-container">
     <flash-messages></flash-messages>
 </div>
 
-<!-- <button (click)="getTweetDataOnBoundsChange()">Click</button> -->
-<button (click)="test()">Click</button>
+<!-- <button (click)="getTweetDataOnBoundsChange()">Get Tweets</button>
+<button (click)="getPlaceDataOnBoundsChange()">Get Places</button>
+<button (click)="test()">Get Places</button> -->
 
 <table>
     <tr>
@@ -46,9 +47,9 @@
             <div ngD3Slider id="displayNum" [step]="1"  [length]="250" [minValue]="1" [maxValue]="50" [initialValue]="10" (selectedValue)="onSliderDisplayChange($event)"></div>
         </td>
         <td>
-            <h2>Distance Threshold</h2>
+            <h2>Displayed Places</h2>
             <p>{{sliderMinDistance}}</p>
-            <div ngD3Slider id="minDist" [step]="1"  [length]="250" [minValue]="1" [maxValue]="100" [initialValue]="2" (selectedValue)="onSliderDistanceChange($event)"></div>
+            <div ngD3Slider id="minDist" [step]="1"  [length]="250" [minValue]="1" [maxValue]="25" [initialValue]="15" (selectedValue)="onSliderDistanceChange($event)"></div>
         </td>
     </tr>
 </table>

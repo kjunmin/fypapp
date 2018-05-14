@@ -4,10 +4,12 @@ import { TweetmarkerService } from '../../services/tweetmarker.service';
 import { CorrelationService } from '../../services/correlation.service';
 import { AlgorithmService } from '../../services/algorithm.service';
 import { MapWindow } from '../../models/window';
-import { AgmCoreModule, GoogleMapsAPIWrapper, AgmInfoWindow, AgmDataLayer, CircleManager, AgmCircle } from '@agm/core';
+import { AgmCoreModule, GoogleMapsAPIWrapper, AgmInfoWindow, AgmDataLayer } from '@agm/core';
 import { Observable } from 'rxjs/Observable';
 import { Promise } from 'q';
 import { MapMarker } from '../../models/marker';
+import { PlaceMarker } from '../../models/places';
+import { request } from 'd3';
 
 
 declare var google:any;
@@ -25,6 +27,8 @@ export class MapgreedyComponent implements OnInit {
   @ViewChild("content-box") private cBox
   displayedTweetArray: Object[];
   lastTweetArray: Object[];
+  lastPlaceArray: Object[];
+  displayedPlaceArray: Object[];
   myLat: number;
   myLng: number;
   sliderSampleSize: number;
@@ -34,8 +38,6 @@ export class MapgreedyComponent implements OnInit {
 
   constructor(
     private changeDetectorRef: ChangeDetectorRef,
-    private agmCircle: AgmCircle,
-    private circleManager: CircleManager,
     private tweetmarkerService: TweetmarkerService, 
     private correlationService: CorrelationService,
     private flashMessagesService: FlashMessagesService,
@@ -45,9 +47,11 @@ export class MapgreedyComponent implements OnInit {
     this.myLng = 103.86774439999999;
     this.sliderSampleSize = 200;
     this.sliderDisplayNum = 10;
-    this.sliderMinDistance = 2;
+    this.sliderMinDistance = 15;
     this.timeout = 0;
     this.displayedTweetArray = [];
+    this.displayedPlaceArray = [];
+    this.lastPlaceArray = [];
   }
 
 
@@ -57,32 +61,101 @@ export class MapgreedyComponent implements OnInit {
 
   test() {
     let _self = this;
-    function callback(place, status) {
+    let mapWindow = new MapWindow(this.tweetmarkerService).getLatLngBounds(this.gmapWrapper).then(bounds => {
+      _self.gmapWrapper.getNativeMap().then(map => {
+        var request = {
+          bounds : bounds,
+          type: ['restaurant']
+        };
+        let service = new google.maps.places.PlacesService(map);
+        service.nearbySearch(request, callback);
+      })
+    });
+    function callback(results, status) {
         if (status == google.maps.places.PlacesServiceStatus.OK) {
-          let a = _self.createPlaceMarker(place);
-          _self.gmapWrapper.createMarker(a);
-          _self.gmapWrapper.panTo(place.geometry.location);
+          for (var i = 0; i < results.length; i++) {
+            console.log(results[5]);
+            var place = _self.createPlaceMarker(results[i]);
+            _self.gmapWrapper.createMarker(place);
+            _self.gmapWrapper.panTo(results[i].geometry.location);
+          }
         }
       }
-    this.gmapWrapper.getNativeMap().then(map => {
-      let service = new google.maps.places.PlacesService(map);
-      service.getDetails({placeId:'ChIJN1t_tDeuEmsRUsoyG83frY4'}, callback);
-    })
   }
 
   mapSettle() {
     clearTimeout(this.timeout);
     this.timeout = setTimeout(() => {
+      var start = new Date().getTime();
       this.getTweetDataOnBoundsChange();
+      // this.getPlaceDataOnBoundsChange();
+      var end = new Date().getTime();
+      console.log("Server Traversal " + (end - start) + " milliseconds.")
      } , 2000); //Get tweet data once map has been in idle state for 2 seconds
+  }
+
+
+  getPlaceDataOnBoundsChange() {
+    let _self = this;
+
+    if (this.lastPlaceArray != undefined) {
+      this.deletePlacesFromMap(this.lastPlaceArray);
+    }
+
+    function containsPlace(pArray, place) {
+      let q = Promise((resolve, reject)=>{
+        let k = false;
+        pArray.forEach(element => {
+          if (element.id == place.id) {
+            k = true;
+          }
+        });
+        resolve(k);
+      });
+      return q; 
+      
+    }
+
+    function getArrayDisplay(results, status) {
+      if (status == google.maps.places.PlacesServiceStatus.OK) {
+        for (let i = 0; i < (results.length - _self.lastPlaceArray.length); i++) {
+          _self.displayedPlaceArray.push(results[i]);
+          let place = _self.createPlaceMarker(results[i]);
+          containsPlace(_self.lastPlaceArray, place).then(res => {
+            if (!res) {
+              _self.gmapWrapper.createMarker(place).then(res => {
+                _self.lastPlaceArray.push(res);
+              });
+            }
+          })
+          
+        }
+        console.log(_self.lastPlaceArray);
+      }
+    }
+    
+    let mapWindow = new MapWindow(this.tweetmarkerService).getLatLngBounds(this.gmapWrapper).then(bounds => {
+      _self.gmapWrapper.getNativeMap().then(map => {
+        let request = {
+          // keyword : "wind",
+          bounds : bounds,
+          rankBy: google.maps.places.RankBy.PROMINENCE
+        };
+        let service = new google.maps.places.PlacesService(map);
+        service.nearbySearch(request, getArrayDisplay);
+      })
+    });
+    console.log(this.lastPlaceArray);
   }
 
   //gets window tweet data (POLYGON)
   getTweetDataOnBoundsChange() {
+    let _self = this;
+
     if (this.lastTweetArray != undefined){
-      this.deleteMarkersFromMap(this.lastTweetArray);
+      this.deleteTweetsFromMap(this.lastTweetArray);
     }
-    var _self = this;
+    
     function getArrayDisplay(data, sliderNum, tweetArr) {
       let arrSize = ( data.output.length > sliderNum ? sliderNum: data.output.length);
         _self.algorithmService.selectGreedy(data.output, tweetArr, 0.5, arrSize, 0.02, data => {
@@ -99,23 +172,19 @@ export class MapgreedyComponent implements OnInit {
           })
         });
     }
-    this.getMapBounds(res => {
-      var mWindow = new MapWindow(this.tweetmarkerService, res.northEastBounds.lat, res.northEastBounds.lng, 
-        res.northWestBounds.lat, res.northWestBounds.lng,
-        res.southEastBounds.lat, res.southEastBounds.lng, 
-        res.southWestbounds.lat, res.southWestbounds.lng);
-        mWindow.getTweetsInWindow(this.sliderSampleSize).subscribe(data => {
+    let mWindow = new MapWindow(this.tweetmarkerService).getMapBounds(this.gmapWrapper).then( map => {
+      map.getTweetsInWindow(this.sliderSampleSize).subscribe(data => {
         if (data.success) {
           getArrayDisplay(data, this.sliderDisplayNum, this.lastTweetArray);
         } else {
           this.flashMessagesService.show(data.output, {cssClass: 'alert-danger', timeout:3000})
         }
       })
-    }); 
+    });
   }
 
   createPlaceMarker(place) {
-    console.log(place);
+    var _self = this;
     let image = {
       url: place.icon,
       size: new google.maps.Size(71, 71),
@@ -123,11 +192,20 @@ export class MapgreedyComponent implements OnInit {
       anchor: new google.maps.Point(17, 34),
       scaledSize: new google.maps.Size(25, 25)
     };
-
+    var pLatLng = new google.maps.LatLng(place.Latitude, place.Longitude);
     let marker = new google.maps.Marker({
+      id: place.id,
       icon: image,
       title: place.name,
       position: place.geometry.location
+    });
+    marker.setAnimation(google.maps.Animation.DROP);
+    marker.info = new PlaceMarker().createInfoWindow(place, pLatLng);
+    google.maps.event.addListener(marker, 'click', function() {   //On clicking a marker
+      //TODO: Add onclick event to google place
+      console.log(place);
+      _self.changeDetectorRef.detectChanges();
+      marker.info.open(this.gmapWrapper, marker);  
     });
     return marker;
   }
@@ -136,7 +214,6 @@ export class MapgreedyComponent implements OnInit {
   createMarker(tweet) {
     var _self = this;
     var mLatLng = new google.maps.LatLng(tweet.Latitude, tweet.Longitude);
-  
     var marker = new google.maps.Marker({
         position: mLatLng,
         tweet: tweet
@@ -149,6 +226,21 @@ export class MapgreedyComponent implements OnInit {
       marker.info.open(this.gmapWrapper, marker);                 //And open the info window for the marker
     });
     return marker;
+  }
+
+  displayPlacesInArray(placeArray): Promise<any> {
+    console.log("creating " + placeArray.length + "new Places");
+    let q = Promise<any>((resolve, reject)=>{
+      var windowArray = [];
+      placeArray.forEach(element => {
+        let marker = this.createMarker(element);
+        this.gmapWrapper.createMarker(marker).then(res => {
+          windowArray.push(res);
+        })
+      });
+      resolve(windowArray);
+    });
+    return q; 
   }
 
   displayTweetsInArray(tweetArray): Promise<any> {
@@ -166,8 +258,40 @@ export class MapgreedyComponent implements OnInit {
     return q; 
   }
 
+  deletePlacesFromMap(pArray) {
+    console.log("Deleting Places");
+    let ltA = pArray.length;
+    function removePlaceFromLastArray(element, array) {
+      var index = array.map(function(e) { return e.id; }).indexOf(element.id);
+      if (index > -1) {
+        array.splice(index, 1);
+      }
+      return array;
+    }
+
+    this.gmapWrapper.getNativeMap().then(map => {
+      if (pArray == null || pArray == undefined) {
+        return;
+      }else  {
+        let count = 0;
+        let newPlaceArray = this.lastPlaceArray.slice();
+        pArray.forEach(element => {
+          if (!map.getBounds().contains(element.getPosition())) {
+            element.setMap(null);
+            count++;
+            newPlaceArray = removePlaceFromLastArray(element, newPlaceArray);
+          }
+        });
+        console.log("Deletion completed: " + count + "places removed")
+        console.log("lastPlaceArray from " + ltA + "=>" + newPlaceArray.length);
+        console.log(newPlaceArray);
+        this.lastPlaceArray = newPlaceArray.slice();
+      }
+    }) 
+  }
+
   //Delete tweet markers from map
-  deleteMarkersFromMap(mArray) {
+  deleteTweetsFromMap(tArray) {
     console.log("Deleting Markers...");
     console.log(this.lastTweetArray);
     let ltA = this.lastTweetArray.length;
@@ -180,12 +304,12 @@ export class MapgreedyComponent implements OnInit {
       return array;
     }
     this.gmapWrapper.getNativeMap().then(map => {
-        if (mArray == null || mArray == undefined) {
+        if (tArray == null || tArray == undefined) {
           return;
         }else  {
           let count = 0;
           let newTweetArr = this.lastTweetArray.slice();
-          mArray.forEach(element => {
+          tArray.forEach(element => {
             if (!map.getBounds().contains(element.getPosition())) {
               element.setMap(null);
               count++;
@@ -211,21 +335,6 @@ export class MapgreedyComponent implements OnInit {
 
   onSliderDistanceChange(value) {
     this.sliderMinDistance = Math.round(value);
-  }
-
-  //returns a json object with mapbounds
-  getMapBounds(callback) {
-    let _this = this;
-    this.gmapWrapper.getBounds().then(data => {
-      let windowInfo = data.toJSON();
-      let bounds = {
-        northEastBounds: {lat: windowInfo.north, lng: windowInfo.east},
-        southEastBounds: {lat: windowInfo.south, lng: windowInfo.east},
-        northWestBounds: {lat: windowInfo.north, lng: windowInfo.west},
-        southWestbounds: {lat: windowInfo.south, lng: windowInfo.west}
-      }
-      callback(bounds)
-    });
   }
   
 }

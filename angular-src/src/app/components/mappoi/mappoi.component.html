@@ -1,35 +1,38 @@
 <h1> FYP Test environment</h1>
 
- <agm-map (idle)="mapSettle()">
+<agm-map (mapClick)="test($event)">
     
 </agm-map>
+
+
+<div id="search-bar">
+  <form class="form-inline">
+    <label for="input-search"></label>
+    <div class="input-group col-xs-6">
+      <input type="text" id="input-search" class="form-control" [(ngModel)] = "searchInput" name="searchInput" placeholder="Search">
+    </div>
+    <button class="btn btn-primary" (click)="getPlaceDataOnBoundsChange()">Search</button>
+  </form>
+</div>
 
 <div class="flash-message-container">
     <flash-messages></flash-messages>
 </div>
 
-<div class="search-bar">
-  <form (submit)="submitSearchQuery()">
-    <div class="form-group col-xs-4">
-      <input type="text" class="form-control" [(ngModel)] = "searchInput" name="searchInput" placeholder="Search">
-    </div>
-    <input type="submit" class="btn btn-primary" value="Search">
-  </form>
-</div>
+<table>
+  <tr>
+      <td>
+          <h3>Sample Size</h3>
+          <p>{{sliderSampleSize}}</p>
+          <div ngD3Slider id="sampleSize" [step]="1"  [length]="250" [minValue]="1" [maxValue]="500" [initialValue]="200" (selectedValue)="onSliderSampleChange($event)"></div>
+      </td>
+      <td>
+          <h3>Displayed Tweets</h3>
+          <p>{{sliderSelectedSize}}</p>
+          <div ngD3Slider id="displayNum" [step]="1"  [length]="250"  [maxValue]='50'  [minValue]="1"  [initialValue]="25" (selectedValue)="onSliderDisplayChange($event)"></div>
+      </td>
+  </tr>
+</table>
 
-<div class="slider-group">
-  <table>
-    <tr>
-        <td>
-            <h2>Sample Size</h2>
-            <p>{{sliderSampleSize}}</p>
-            <div ngD3Slider id="sampleSize" [step]="1"  [length]="250" [minValue]="1" [maxValue]="500" [initialValue]="200" (selectedValue)="onSliderSampleChange($event)"></div>
-        </td>
-        <td>
-            <h2>Displayed Tweets</h2>
-            <p>{{sliderDisplayNum}}</p>
-            <div ngD3Slider id="displayNum" [step]="1"  [length]="250" [minValue]="1" [maxValue]="20" [initialValue]="10" (selectedValue)="onSliderDisplayChange($event)"></div>
-        </td>
-    </tr>
-  </table>
-</div>
+
+

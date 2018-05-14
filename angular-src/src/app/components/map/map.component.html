@@ -1,8 +1,8 @@
-<h1> FYP Test environment</h1>
+<h1></h1>
 
  <agm-map (mapClick)="getTweetDataOnMapClick($event)"  (boundsChange)="getTweetDataOnBoundsChange()">
     <agm-marker [latitude]="myLat" [longitude]="myLng" [label]="myLabel"></agm-marker>
-    <!-- <agm-marker (onCreate)="test()" *ngFor="let tweet of tweetArray" (markerClick)="compareSimWithMarker(tweet)" [label]="tweet.Label" [latitude]="tweet.Latitude" [longitude]="tweet.Longitude">
+    <agm-marker *ngFor="let tweet of tweetArray" (markerClick)="compareSimWithMarker(tweet)" [label]="tweet.Label" [latitude]="tweet.Latitude" [longitude]="tweet.Longitude">
         <agm-info-window>
             <div class="tweet-window-container">
                 <ul class="list-group">
@@ -12,7 +12,7 @@
                 </ul>
             </div>
         </agm-info-window>
-    </agm-marker> -->
+    </agm-marker>
 </agm-map>
 
 <div class="flash-message-container">
@@ -64,7 +64,7 @@
         </tr>
     </thead>
     <tbody> 
-        <tr scope="row" class="table-active" *ngFor="let tweet of counter | async">
+        <tr scope="row" class="table-active" *ngFor="let tweet of tweetArray">
             <td>{{tweet.Tags}}</td>
             <td>{{tweet.CosSim}}</td>
             <td>{{tweet.Distance}}</td>

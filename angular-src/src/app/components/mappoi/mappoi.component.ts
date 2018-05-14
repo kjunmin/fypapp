@@ -1,10 +1,14 @@
-import { Component, OnInit, NgModule, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, NgModule, ViewChild, AfterViewInit, ChangeDetectorRef } from '@angular/core';
 import { FlashMessagesService } from 'angular2-flash-messages';
 import { PoimarkerService } from '../../services/poimarker.service';
 import { CorrelationService } from '../../services/correlation.service';
+import { TweetmarkerService } from '../../services/tweetmarker.service';
 import { AlgorithmService } from '../../services/algorithm.service';
+import { PlaceMarker } from '../../models/places';
 import { AgmCoreModule, GoogleMapsAPIWrapper, AgmInfoWindow, AgmDataLayer, CircleManager, AgmCircle } from '@agm/core';
 import { Observable } from 'rxjs/Observable';
+import { Promise } from 'q';
+import { MapWindow } from '../../models/window';
 
 declare var google:any;
 
@@ -25,120 +29,199 @@ export class MappoiComponent implements OnInit {
   myLng: number;
   myLabel: string;
   lastClickedCircle: any;
-  sliderSampleSize: number;
-  sliderDisplayNum: number;
-  timeout: any;
+  tweetArray: any[];
+  lastTweetCircleArray: any[];
   searchInput: string;
+  sliderSampleSize: number;
+  sliderSelectedSize: number;
+  lastPlaceArray: Object[];
+  displayedPlaceArray: Object[];
 
   constructor(
     private agmCircle: AgmCircle,
     private circleManager: CircleManager,
-    private poimarkerService: PoimarkerService, 
+    private changeDetectorRef: ChangeDetectorRef,
+    private tweetmarkerService: TweetmarkerService, 
     private correlationService: CorrelationService,
     private flashMessagesService: FlashMessagesService,
     private algorithmService: AlgorithmService
+    
+
   ) { 
     this.myLabel = "YOU ARE HERE";
     this.myLat = 1.3553794;
     this.myLng = 103.86774439999999;
     this.lastClickedCircle = null;
+    this.tweetArray = [];
+    this.displayedPlaceArray = [];
+    this.lastPlaceArray = [];
     this.sliderSampleSize = 200;
-    this.sliderDisplayNum = 10;
-    this.timeout = 0;
-  }
-
-  test() {
-    console.log("test");
-  }
-
+    this.sliderSelectedSize = 25;
+  } 
+  
   ngOnInit() { 
     this.gmapWrapper.panTo({lat: this.myLat, lng:this.myLng});
   }
 
-  submitSearchQuery() {
-    this.deleteMarkersFromMap(this.lastPoiWindowArray);
-    this.getMapBounds(res => {
-      this.getPoiPolygonSearch(res.northEastBounds.lat, res.northEastBounds.lng, 
-        res.northWestBounds.lat, res.northWestBounds.lng,
-        res.southEastBounds.lat, res.southEastBounds.lng, 
-        res.southWestbounds.lat, res.southWestbounds.lng, data => {
-          // var k = this.algorithmService.selectGreedy(data, 0.5, 25);
-          this.lastPoiWindowArray = this.displayPoiInArray(data);
-      });
-    }); 
-  }
-
-  mapSettle() {
-    clearTimeout(this.timeout);
-    this.timeout = setTimeout(() => {
-      this.getPoiDataOnBoundsChange();
-     } , 3000); //Get tweet data once map has been in idle state for 2 seconds
-  }
-
-  //gets window tweet data (POLYGON)
-  getPoiDataOnBoundsChange() {
-    this.deleteMarkersFromMap(this.lastPoiWindowArray);
-    this.getMapBounds(res => {
-      this.getPoiInPolygon(res.northEastBounds.lat, res.northEastBounds.lng, 
-        res.northWestBounds.lat, res.northWestBounds.lng,
-        res.southEastBounds.lat, res.southEastBounds.lng, 
-        res.southWestbounds.lat, res.southWestbounds.lng, data => {
-          // var k = this.algorithmService.selectGreedy(data, 0.5, 25);
-          this.lastPoiWindowArray = this.displayPoiInArray(data);
-      });
-    }); 
-  }
-
-  getPoiPolygonSearch(lat1, lng1, lat2, lng2, lat3, lng3, lat4, lng4, callback){
-    let sampleSize = this.sliderSampleSize;
-    let searchInput = this.searchInput;
-    let tweetArray = [];
-    let polygonVal = {
-      lat1: lat1,
-      lng1: lng1,
-      lat2: lat2,
-      lng2: lng2,
-      lat3: lat3,
-      lng3: lng3,
-      lat4: lat4,
-      lng4: lng4,
-      searchInput: searchInput,
-      sampleSize: sampleSize
+  test(res) {
+    this.deleteMarkersFromMap(this.lastTweetCircleArray);
+    let lat = res.coords.lat;
+    let lng = res.coords.lng;
+    const position = new google.maps.LatLng(lat, lng);
+    // this.centerMap(position);
+    let searchRadius = 2000;
+    this.drawCircle(position, searchRadius);
+    let circleVal = {
+      lat: lat,
+      lng: lng,
+      mindistance: 0,
+      maxdistance: searchRadius,
+      sampleSize: this.sliderSampleSize
     }
-    this.poimarkerService.getPoiWithSearch(polygonVal).subscribe(data => {
-      if (data.success) {
-        console.log(data.output);
-        let arrSize = ( data.output.length > this.sliderSampleSize ? this.sliderSampleSize: data.output.length);
-        callback(data.output);
-      } else {
-        this.flashMessagesService.show(data.output, {cssClass: 'alert-danger', timeout:3000})
-      }
+    this.tweetmarkerService.getTweetsInCircle(circleVal).subscribe(data => {
+      console.log(data);
+      let newArr = data.output.slice(0, this.sliderSelectedSize);
+      this.tweetArray = newArr;
+      this.lastTweetCircleArray = this.displayTweetsOnMap(newArr);
     });
   }
 
-  getPoiInPolygon(lat1, lng1, lat2, lng2, lat3, lng3, lat4, lng4, callback){
-    let sampleSize = this.sliderSampleSize;
-    let tweetArray = [];
-    let polygonVal = {
-      lat1: lat1,
-      lng1: lng1,
-      lat2: lat2,
-      lng2: lng2,
-      lat3: lat3,
-      lng3: lng3,
-      lat4: lat4,
-      lng4: lng4,
-      sampleSize: sampleSize
-    }
-    this.poimarkerService.getPoiInPolygon(polygonVal).subscribe(data => {
-      if (data.success) {
-        console.log(data.output);
-        let arrSize = ( data.output.length > this.sliderSampleSize ? this.sliderSampleSize: data.output.length);
-        callback(data.output);
-      } else {
-        this.flashMessagesService.show(data.output, {cssClass: 'alert-danger', timeout:3000})
-      }
+  createPlaceMarker(place) {
+    var _self = this;
+    let image = {
+      url: place.icon,
+      size: new google.maps.Size(71, 71),
+      origin: new google.maps.Point(0, 0),
+      anchor: new google.maps.Point(17, 34),
+      scaledSize: new google.maps.Size(25, 25)
+    };
+    var pLatLng = new google.maps.LatLng(place.Latitude, place.Longitude);
+    let marker = new google.maps.Marker({
+      id: place.id,
+      icon: image,
+      title: place.name,
+      position: place.geometry.location
     });
+    marker.setAnimation(google.maps.Animation.DROP);
+    marker.info = new PlaceMarker().createInfoWindow(place, pLatLng);
+    google.maps.event.addListener(marker, 'click', function() {   //On clicking a marker
+      //TODO: Add onclick event to google place
+      _self.changeDetectorRef.detectChanges();
+      marker.info.open(this.gmapWrapper, marker);  
+    });
+    return marker;
+  }
+
+  deletePlacesFromMap(pArray) {
+    console.log("Deleting Places");
+    let ltA = pArray.length;
+    function removePlaceFromLastArray(element, array) {
+      var index = array.map(function(e) { return e.id; }).indexOf(element.id);
+      if (index > -1) {
+        array.splice(index, 1);
+      }
+      return array;
+    }
+
+    this.gmapWrapper.getNativeMap().then(map => {
+      if (pArray == null || pArray == undefined) {
+        return;
+      }else  {
+        let count = 0;
+        let newPlaceArray = this.lastPlaceArray.slice();
+        pArray.forEach(element => {
+          if (!map.getBounds().contains(element.getPosition())) {
+            element.setMap(null);
+            count++;
+            newPlaceArray = removePlaceFromLastArray(element, newPlaceArray);
+          }
+        });
+        console.log("Deletion completed: " + count + "places removed")
+        console.log("lastPlaceArray from " + ltA + "=>" + newPlaceArray.length);
+        console.log(newPlaceArray);
+        this.lastPlaceArray = newPlaceArray.slice();
+      }
+    }) 
+  }
+
+  displayPlacesInArray(placeArray): Promise<any> {
+    console.log("creating " + placeArray.length + "new Places");
+    let q = Promise<any>((resolve, reject)=>{
+      var windowArray = [];
+      placeArray.forEach(element => {
+        let marker = this.createMarker(element);
+        this.gmapWrapper.createMarker(marker).then(res => {
+          windowArray.push(res);
+        })
+      });
+      resolve(windowArray);
+    });
+    return q; 
+  }
+
+  getPlaceDataOnBoundsChange() {
+    let _self = this;
+
+    if (this.lastPlaceArray != undefined) {
+      this.deletePlacesFromMap(this.lastPlaceArray);
+    }
+
+    function containsPlace(pArray, place) {
+      let q = Promise((resolve, reject)=>{
+        let k = false;
+        pArray.forEach(element => {
+          if (element.id == place.id) {
+            k = true;
+          }
+        });
+        resolve(k);
+      });
+      return q; 
+      
+    }
+
+    function getArrayDisplay(results, status) {
+      if (status == google.maps.places.PlacesServiceStatus.OK) {
+        for (let i = 0; i < (results.length - _self.lastPlaceArray.length); i++) {
+          _self.displayedPlaceArray.push(results[i]);
+          let place = _self.createPlaceMarker(results[i]);
+          containsPlace(_self.lastPlaceArray, place).then(res => {
+            if (!res) {
+              _self.gmapWrapper.createMarker(place).then(res => {
+                _self.lastPlaceArray.push(res);
+              });
+            }
+          })
+          
+        }
+        console.log(_self.lastPlaceArray);
+      }
+    }
+    
+    let mapWindow = new MapWindow(this.tweetmarkerService).getLatLngBounds(this.gmapWrapper).then(bounds => {
+      _self.gmapWrapper.getNativeMap().then(map => {
+        let request = {
+          keyword : this.searchInput,
+          bounds : bounds,
+          rankBy: google.maps.places.RankBy.PROMINENCE
+        };
+        let service = new google.maps.places.PlacesService(map);
+        service.nearbySearch(request, getArrayDisplay);
+      })
+    });
+    console.log(this.lastPlaceArray);
+  }
+
+
+  displayTweetsOnMap(tArray) {
+    let tweetArray = [];
+    tArray.forEach(element => {
+      let marker = this.createMarker(element);
+      this.gmapWrapper.createMarker(marker).then(res => {
+        tweetArray.push(res);
+      })
+    });
+    return tweetArray;
   }
 
   createMarker(object) {
@@ -149,7 +232,6 @@ export class MappoiComponent implements OnInit {
         position: mLatLng,
     });
     marker.setAnimation(google.maps.Animation.DROP);
-    marker.info = this.createInfoWindow(object, mLatLng);
     google.maps.event.addListener(marker, 'click', function() {   //On clicking a marker
       if (this.tweetArray !== null) {
         // _self.compareSimWithMarker(object);     //Execute similarity calculation
@@ -157,6 +239,28 @@ export class MappoiComponent implements OnInit {
       marker.info.open(this.gmapWrapper, marker);                 //And open the info window for the marker
     });
     return marker;
+  }
+
+   //Get tweets in an area
+   getTweetsInCircle(lat, lng, minDistance, maxDistance, callback) {
+    let sampleSize = 500;
+    let tweetArray = [];
+    let tweetArray2 = [];
+    let circleVal = {
+      lat: lat,
+      lng: lng,
+      mindistance: minDistance,
+      maxdistance: maxDistance,
+      sampleSize: sampleSize
+    }
+    //Limit by sample size
+    this.tweetmarkerService.getTweetsInCircle(circleVal).subscribe(data => {
+      if (data.success) {
+        callback(data.output);
+      } else {
+        this.flashMessagesService.show(data.output, {cssClass: 'alert-danger', timeout:3000})
+      }
+    });
   }
 
   displayPoiInArray(tweetArray) {
@@ -210,19 +314,6 @@ export class MappoiComponent implements OnInit {
     });
   }
 
-  createInfoWindow(marker, position) {
-    var info = new google.maps.InfoWindow({
-      content: "<div class='tweet-window-container'> \
-                  <ul class='list-group'> \
-                      <li class='list-group-item'><h5>Name:</h5> " +  marker.PlaceName + "</li> \
-                      <li class='list-group-item'><h5>Category:</h5> " + marker.Category + "</li> \
-                  </ul> \
-              </div>",
-      position: position
-    })
-    return info;
-  }
-
   //returns a json object with mapbounds
   getMapBounds(callback) {
     let _this = this;
@@ -239,13 +330,13 @@ export class MappoiComponent implements OnInit {
     });
   }
 
-  //Slider 
-  onSliderSampleChange(value) {
+   //Slider 
+   onSliderSampleChange(value) {
     this.sliderSampleSize = Math.round(value);
   }
 
   onSliderDisplayChange(value) {
-    this.sliderDisplayNum = Math.round(value);
+    this.sliderSelectedSize = Math.round(value);
   }
 
 
